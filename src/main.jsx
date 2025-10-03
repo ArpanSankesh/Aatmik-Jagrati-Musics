@@ -17,13 +17,9 @@ const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* Provides data fetching and caching capabilities */}
     <QueryClientProvider client={queryClient}>
-      {/* Handles all application routing */}
       <BrowserRouter>
-        {/* Manages user authentication state (who is logged in) */}
         <AuthProvider>
-          {/* Manages shopping cart state */}
           
             <App />
           
