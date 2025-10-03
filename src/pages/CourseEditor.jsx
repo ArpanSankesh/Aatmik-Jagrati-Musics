@@ -8,9 +8,13 @@ import { uploadToCloudinary } from '../services/cloudinaryService';
 
 const newCourseTemplate = {
   title: "",
+  description: "",
   imageUrl: "",
   instructor: "",
   price: "₹",
+  originalPrice: "",
+  courseDuration: "",
+  accessDuration: "",
   levels: [],
   createdAt: serverTimestamp(),
 };
@@ -240,7 +244,7 @@ export default function CourseEditor() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header - Responsive */}
+      {/* Header */}
       <div className="bg-white border-b shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2 sm:gap-3">
@@ -255,7 +259,7 @@ export default function CourseEditor() {
                 <h1 className="text-base sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
                   {isNewCourse ? 'Create New Course' : 'Edit Course'}
                 </h1>
-                <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">Create and manage your piano lessons</p>
+                <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">Create and manage your course</p>
               </div>
             </div>
             <button
@@ -277,7 +281,7 @@ export default function CourseEditor() {
       </div>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        {/* Course Details Card - Responsive */}
+        {/* Course Details Card */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8">
           <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -287,7 +291,7 @@ export default function CourseEditor() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-            {/* Image Upload Section - Responsive */}
+            {/* Image Upload Section */}
             <div className="lg:col-span-1">
               <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
                 Course Cover Image
@@ -368,7 +372,7 @@ export default function CourseEditor() {
               </div>
             </div>
 
-            {/* Course Details Section - Responsive */}
+            {/* Course Details Section */}
             <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               <div>
                 <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
@@ -382,6 +386,20 @@ export default function CourseEditor() {
                   placeholder="Add course title"
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition outline-none text-base sm:text-lg"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
+                  Course Description
+                </label>
+                <textarea
+                  name="description"
+                  value={course.description || ''}
+                  onChange={handleCourseChange}
+                  placeholder="Add a detailed course description"
+                  rows="4"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition outline-none text-sm sm:text-base resize-none"
+                ></textarea>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -408,16 +426,63 @@ export default function CourseEditor() {
                     name="price"
                     value={course.price}
                     onChange={handleCourseChange}
-                    placeholder="Add price"
+                    placeholder="₹999"
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition outline-none text-sm sm:text-base"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
+                    Original Price (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    name="originalPrice"
+                    value={course.originalPrice || ''}
+                    onChange={handleCourseChange}
+                    placeholder="₹4999"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition outline-none text-sm sm:text-base"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">For showing discounts</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
+                    Course Duration
+                  </label>
+                  <input
+                    type="text"
+                    name="courseDuration"
+                    value={course.courseDuration || ''}
+                    onChange={handleCourseChange}
+                    placeholder="100 days"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition outline-none text-sm sm:text-base"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">e.g., 30 days, 6 weeks</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
+                    Access Duration
+                  </label>
+                  <input
+                    type="text"
+                    name="accessDuration"
+                    value={course.accessDuration || ''}
+                    onChange={handleCourseChange}
+                    placeholder="Lifetime"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition outline-none text-sm sm:text-base"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">e.g., Lifetime, 1 year</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Course Content Section - Responsive */}
+        {/* Course Content Section */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
             <div className="flex items-center space-x-2 sm:space-x-3">
@@ -440,7 +505,7 @@ export default function CourseEditor() {
               <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg sm:rounded-xl border-2 border-dashed border-gray-300">
                 <Music size={40} className="sm:w-12 sm:h-12 mx-auto text-gray-400 mb-3 sm:mb-4" />
                 <p className="text-sm sm:text-base text-gray-600 font-medium mb-1 sm:mb-2">No levels added yet</p>
-                <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4 px-4">Start building your piano course by adding a level</p>
+                <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4 px-4">Start building your course by adding a level</p>
                 <button
                   onClick={addLevel}
                   className="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition inline-flex items-center space-x-2 text-sm sm:text-base"
@@ -452,7 +517,7 @@ export default function CourseEditor() {
             ) : (
               course.levels?.map((level, levelIndex) => (
                 <div key={level.id} className="border-2 border-gray-200 rounded-lg sm:rounded-xl overflow-hidden">
-                  {/* Level Header - Responsive */}
+                  {/* Level Header */}
                   <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 sm:p-4 border-b border-gray-200">
                     <div className="flex items-center gap-2 sm:gap-3">
                       <button className="text-gray-400 hover:text-gray-600 cursor-move hidden sm:block">
@@ -498,7 +563,7 @@ export default function CourseEditor() {
                     </button>
                   </div>
 
-                  {/* Chapters - Responsive */}
+                  {/* Chapters */}
                   {expandedLevels[level.id] !== false && (
                     <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 bg-gray-50">
                       {level.chapters?.length === 0 ? (
@@ -515,7 +580,7 @@ export default function CourseEditor() {
                       ) : (
                         level.chapters?.map((chapter, chapterIndex) => (
                           <div key={chapter.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                            {/* Chapter Header - Responsive */}
+                            {/* Chapter Header */}
                             <div className="bg-gray-50 p-2 sm:p-3 border-b border-gray-200">
                               <div className="flex items-center gap-1.5 sm:gap-2">
                                 <button className="text-gray-400 hover:text-gray-600 cursor-move hidden sm:block">
@@ -561,7 +626,7 @@ export default function CourseEditor() {
                               </button>
                             </div>
 
-                            {/* Topics/Lessons - Responsive */}
+                            {/* Topics/Lessons */}
                             {expandedChapters[chapter.id] !== false && (
                               <div className="p-2 sm:p-3 space-y-2 sm:space-y-3">
                                 {chapter.topics?.length === 0 ? (
@@ -583,7 +648,7 @@ export default function CourseEditor() {
                                           <GripVertical size={14} />
                                         </button>
                                         <div className="flex-1 space-y-2 sm:space-y-3 min-w-0">
-                                          {/* Lesson Title & Duration - Responsive */}
+                                          {/* Lesson Title & Duration */}
                                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                                             <div className="sm:col-span-2">
                                               <label className="block text-xs font-semibold text-gray-600 mb-1">
@@ -613,7 +678,7 @@ export default function CourseEditor() {
                                             </div>
                                           </div>
 
-                                          {/* Video Upload - Responsive */}
+                                          {/* Video Upload */}
                                           <div>
                                             <label className="block text-xs font-semibold text-gray-600 mb-1.5 sm:mb-2">
                                               Lesson Video
@@ -701,7 +766,7 @@ export default function CourseEditor() {
                                             )}
                                           </div>
 
-                                          {/* Notes - Responsive */}
+                                          {/* Notes */}
                                           <div>
                                             <label className="block text-xs font-semibold text-gray-600 mb-1">
                                               Lesson Notes (Optional)

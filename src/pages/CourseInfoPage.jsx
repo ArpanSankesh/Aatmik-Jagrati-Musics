@@ -1,0 +1,338 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../Config/firebaseConfig';
+import { useAuth } from '../context/AuthContext';
+import { 
+  LockClosedIcon, 
+  CheckCircleIcon, 
+  PlayCircleIcon,
+  ClockIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  ArrowLeftIcon
+} from '@heroicons/react/24/solid';
+
+export default function CourseInfoPage() {
+  const { courseId } = useParams();
+  const { currentUser } = useAuth();
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [expandedLevels, setExpandedLevels] = useState({});
+
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        const courseRef = doc(db, 'courses', courseId);
+        const courseSnap = await getDoc(courseRef);
+
+        if (courseSnap.exists()) {
+          const courseData = { id: courseSnap.id, ...courseSnap.data() };
+          setCourse(courseData);
+          // Auto-expand first level
+          if (courseData.levels && courseData.levels.length > 0) {
+            setExpandedLevels({ [courseData.levels[0].id]: true });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching course details: ', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourse();
+  }, [courseId]);
+
+  const toggleLevel = (levelId) => {
+    setExpandedLevels(prev => ({ ...prev, [levelId]: !prev[levelId] }));
+  };
+
+  // Calculate total lessons and duration
+  const getTotalStats = () => {
+    let totalLessons = 0;
+    let totalDuration = 0;
+    
+    course?.levels?.forEach(level => {
+      level.chapters?.forEach(chapter => {
+        totalLessons += chapter.topics?.length || 0;
+        chapter.topics?.forEach(topic => {
+          if (topic.duration) {
+            const minutes = parseInt(topic.duration) || 0;
+            totalDuration += minutes;
+          }
+        });
+      });
+    });
+
+    return { totalLessons, totalDuration };
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Loading course details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">Course Not Found</h1>
+          <Link to="/courses" className="text-indigo-600 hover:underline">← Back to Courses</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const stats = getTotalStats();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      {/* Hero Section with Gradient Background */}
+      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white pt-10 pb-10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-12 max-w-7xl">
+          <Link 
+            to="/courses" 
+            className="inline-flex items-center text-indigo-100 hover:text-white transition mb-6 text-sm sm:text-base"
+          >
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
+            Back to Courses
+          </Link>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            {/* Left: Course Info */}
+            <div className="lg:col-span-2">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
+                {course.title}
+              </h1>
+              <p className="text-lg sm:text-xl text-indigo-100 mb-6 leading-relaxed">
+                {course.description || 'Master the fundamentals and advance your skills with this comprehensive course.'}
+              </p>
+              
+              <div className="mt-6 flex items-center text-sm sm:text-base">
+                <span className="text-indigo-100">Created by</span>
+                <span className="ml-2 font-semibold">{course.instructor}</span>
+              </div>
+            </div>
+
+            {/* Right: Mobile CTA (visible on mobile) */}
+            <div className="lg:hidden">
+              <div className="bg-white rounded-2xl shadow-2xl p-6">
+                <img 
+                  src={course.imageUrl} 
+                  alt={course.title} 
+                  className="w-full h-48 object-cover rounded-xl mb-6"
+                />
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-4xl font-extrabold text-gray-900">{course.price}</span>
+                    {course.originalPrice && (
+                      <span className="text-lg text-gray-400 line-through">{course.originalPrice}</span>
+                    )}
+                  </div>
+                </div>
+                <Link 
+                  to={currentUser ? `/checkout/${course.id}` : '/login'} 
+                  className="w-full block text-center bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-4 rounded-xl hover:shadow-lg hover:scale-[1.02] transition text-lg"
+                >
+                  Enroll Now
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-12 max-w-7xl py-8 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column: Course Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Course Curriculum */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Course Curriculum</h2>
+                <div className="text-sm text-gray-600">
+                  <span className="font-semibold">{course.levels?.length || 0}</span> sections • 
+                  <span className="font-semibold ml-1">{stats.totalLessons}</span> lessons • 
+                  <span className="font-semibold ml-1">{Math.floor(stats.totalDuration / 60)}h {stats.totalDuration % 60}m</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {course.levels?.map((level, levelIdx) => (
+                  <div key={level.id} className="border border-gray-200 rounded-xl overflow-hidden hover:border-indigo-300 transition">
+                    <button
+                      onClick={() => toggleLevel(level.id)}
+                      className="w-full flex items-center justify-between p-4 sm:p-5 bg-gradient-to-r from-gray-50 to-white hover:from-indigo-50 hover:to-purple-50 transition"
+                    >
+                      <div className="flex items-center flex-1 min-w-0">
+                        <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center font-bold mr-3 sm:mr-4 flex-shrink-0">
+                          {levelIdx + 1}
+                        </div>
+                        <div className="text-left min-w-0 flex-1">
+                          <h3 className="font-bold text-gray-900 text-base sm:text-lg truncate">{level.title}</h3>
+                          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                            {level.chapters?.length || 0} chapters • {level.chapters?.reduce((acc, ch) => acc + (ch.topics?.length || 0), 0)} lessons
+                          </p>
+                        </div>
+                      </div>
+                      {expandedLevels[level.id] ? (
+                        <ChevronUpIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 flex-shrink-0 ml-2" />
+                      ) : (
+                        <ChevronDownIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 flex-shrink-0 ml-2" />
+                      )}
+                    </button>
+
+                    {expandedLevels[level.id] && (
+                      <div className="bg-gray-50 border-t border-gray-200">
+                        {level.chapters?.map((chapter, chapterIdx) => (
+                          <div key={chapter.id} className="border-b border-gray-200 last:border-0">
+                            <div className="p-4 sm:p-5 bg-white">
+                              <h4 className="font-semibold text-gray-800 mb-3 flex items-center text-sm sm:text-base">
+                                <div className="w-6 h-6 bg-purple-100 text-purple-600 rounded-md flex items-center justify-center text-xs font-bold mr-3">
+                                  {chapterIdx + 1}
+                                </div>
+                                {chapter.title}
+                              </h4>
+                              <ul className="space-y-2 pl-9">
+                                {chapter.topics?.map((topic, topicIdx) => (
+                                  <li key={topic.id} className="flex items-start group hover:bg-indigo-50 p-2 rounded-lg transition">
+                                    <PlayCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-indigo-600 mr-3 mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                      <span className="text-sm sm:text-base text-gray-700 group-hover:text-indigo-700">{topic.title}</span>
+                                      {topic.duration && (
+                                        <div className="flex items-center mt-1">
+                                          <ClockIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 mr-1" />
+                                          <span className="text-xs text-gray-500">{topic.duration}</span>
+                                          <LockClosedIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 ml-3" />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Description Section */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 border border-gray-100">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Description</h2>
+              <div className="text-gray-700 leading-relaxed space-y-4">
+                {course.description ? (
+                  <p className="whitespace-pre-line">{course.description}</p>
+                ) : (
+                  <>
+                    <p>
+                      Welcome to the most comprehensive {course.title} course available online! Whether you're a complete beginner or looking to level up your skills, this course is designed to take you from zero to hero.
+                    </p>
+                    <p>
+                      With over {stats.totalLessons} carefully crafted lessons, you'll learn at your own pace with lifetime access to all course materials. Our step-by-step approach ensures you build a solid foundation while working on real-world projects.
+                    </p>
+                    <p>
+                      Join thousands of students who have already transformed their careers and lives with this course. Don't wait - start your learning journey today!
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Sticky Purchase Card (Desktop Only) */}
+          <div className="hidden lg:block lg:col-span-1">
+            <div className="sticky top-24">
+              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+                <div className="relative">
+                  <img 
+                    src={course.imageUrl} 
+                    alt={course.title} 
+                    className="w-full h-56 object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                </div>
+                
+                <div className="p-6">
+                  <div className="mb-6">
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-4xl font-extrabold text-gray-900">{course.price}</span>
+                      {course.originalPrice && (
+                        <span className="text-lg text-gray-400 line-through">{course.originalPrice}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <Link 
+                    to={currentUser ? `/checkout/${course.id}` : '/login'} 
+                    className="w-full block text-center bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-4 rounded-xl hover:shadow-lg hover:scale-[1.02] transition text-lg mb-6"
+                  >
+                    {currentUser ? 'Enroll Now' : 'Sign In to Enroll'}
+                  </Link>
+
+                  <div className="space-y-3 border-t border-gray-100 pt-6">
+                    <p className="font-semibold text-gray-800 text-sm">This course includes:</p>
+                    {[
+                      { 
+                        icon: ClockIcon, 
+                        text: course.courseDuration 
+                          ? `${course.courseDuration} course duration` 
+                          : `${Math.floor(stats.totalDuration / 60)}+ hours on-demand video` 
+                      },
+                      { 
+                        icon: CheckCircleIcon, 
+                        text: course.accessDuration 
+                          ? `${course.accessDuration} access` 
+                          : 'Full lifetime access' 
+                      },
+                      { icon: CheckCircleIcon, text: 'Access on mobile and desktop' },
+                      { icon: CheckCircleIcon, text: 'Certificate of completion' },
+                      { icon: CheckCircleIcon, text: 'Assignments and projects' },
+                      { icon: CheckCircleIcon, text: 'Direct instructor support' }
+                    ].map((item, idx) => (
+                      <div key={idx} className="flex items-center text-sm text-gray-700">
+                        <item.icon className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
+                        <span>{item.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Sticky Bottom Bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-2xl z-50">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div>
+            <div className="flex items-baseline gap-2">
+              <p className="text-2xl font-extrabold text-gray-900">{course.price}</p>
+              {course.originalPrice && (
+                <span className="text-sm text-gray-400 line-through">{course.originalPrice}</span>
+              )}
+            </div>
+          </div>
+          <Link 
+            to={currentUser ? `/checkout/${course.id}` : '/login'} 
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 px-8 rounded-xl hover:shadow-lg transition"
+          >
+            Enroll Now
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
