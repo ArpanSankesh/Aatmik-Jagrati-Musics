@@ -69,7 +69,6 @@ export default function CourseDetailPage() {
         fetchCourseAndCheckAccess();
     }, [currentUser, courseId, navigate]);
 
-
     const toggleLevel = (levelId) => setOpenLevels(prev => ({ ...prev, [levelId]: !prev[levelId] }));
     const handleSelectTopic = (topic) => {
         setCurrentTopic(topic);
@@ -163,7 +162,22 @@ export default function CourseDetailPage() {
                 <main className="flex-1 overflow-y-auto p-6">
                     {currentTopic ? (
                         <>
-                            <div className="relative"><div className="aspect-w-4 aspect-h-3 mb-6 rounded-lg overflow-hidden shadow-xl bg-black"><iframe src={currentTopic.videoUrl} title={currentTopic.title} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="w-full h-full"></iframe></div><div className="absolute inset-0 z-10 pointer-events-none" aria-hidden="true"></div></div>
+                            <div className="w-full mb-6">
+                                <div className="relative w-full bg-black rounded-lg overflow-hidden shadow-xl" style={{ paddingBottom: '56.25%' }}>
+                                    <video
+                                        key={currentTopic.id}
+                                        className="absolute top-0 left-0 w-full h-full"
+                                        controls
+                                        controlsList="nodownload noremoteplayback"
+                                        disablePictureInPicture
+                                        onContextMenu={(e) => e.preventDefault()}
+                                        style={{ objectFit: 'contain' }}
+                                    >
+                                        <source src={currentTopic.videoUrl} type="video/mp4" />
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                            </div>
                             <div className="bg-white rounded-lg shadow-md p-6">
                                 <h2 className="text-2xl font-bold text-slate-800 mb-4">{currentTopic.title}</h2>
                                 <div className="border-b border-slate-200">

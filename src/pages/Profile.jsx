@@ -1,40 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { updateProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { User, Mail, Edit3, Key, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Profile() {
-    const { currentUser } = useAuth();
+    const { currentUser, userRole } = useAuth();
     const [displayName, setDisplayName] = useState(currentUser.displayName || '');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
-    const [isAdmin, setIsAdmin] = useState(false);
-    const [checkingRole, setCheckingRole] = useState(true);
 
-    // Check if user has admin role
-    useEffect(() => {
-        const checkAdminRole = async () => {
-            try {
-                // Get the ID token result which contains custom claims
-                const idTokenResult = await currentUser.getIdTokenResult();
-                
-                // Check if user has admin custom claim
-                if (idTokenResult.claims.admin === true) {
-                    setIsAdmin(true);
-                }
-            } catch (err) {
-                console.error('Error checking admin role:', err);
-            } finally {
-                setCheckingRole(false);
-            }
-        };
-
-        if (currentUser) {
-            checkAdminRole();
-        }
-    }, [currentUser]);
+    // Check if user is admin based on Firestore role
+    const isAdmin = userRole === 'admin';
 
     const handleProfileUpdate = async () => {
         if (currentUser.displayName === displayName) return;
@@ -81,9 +59,9 @@ export default function Profile() {
                 )}
 
                 {/* Admin Dashboard Button */}
-                {!checkingRole && isAdmin && (
+                {isAdmin && (
                     <div className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-6">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between flex-col sm:flex-row gap-4">
                             <div className="flex items-center space-x-3">
                                 <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                                     <Shield className="w-6 h-6 text-white" />
@@ -95,7 +73,7 @@ export default function Profile() {
                             </div>
                             <Link
                                 to="/admin"
-                                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-md flex items-center space-x-2"
+                                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-md flex items-center space-x-2 whitespace-nowrap"
                             >
                                 <Shield className="w-5 h-5" />
                                 <span>Go to Admin Panel</span>
