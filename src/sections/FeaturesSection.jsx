@@ -5,27 +5,27 @@ export default function FeaturesSection() {
         {
             title: "🎥 HD Video Lessons",
             desc: "Step-by-step piano tutorials designed for beginners and intermediate learners.",
-            img: "/public/assets/online-class.jpg",
+            img: "/assets/online-class.jpg",
         },
         {
             title: "📊 Progress Tracking",
             desc: "Stay motivated with real-time progress tracking and lesson completion stats.",
-            img: "/public/assets/progress.jpg",
+            img: "/assets/progress.jpg",
         },
         {
             title: "📑 Downloadable Notes",
             desc: "Access sheet music and practice exercises anytime to reinforce your learning.",
-            img: "/public/assets/notes.jpg",
+            img: "/assets/notes.jpg",
         },
         {
             title: "🔒 Secure Learning",
             desc: "Encrypted streaming with anti-piracy protection to keep your lessons safe.",
-            img: "/public/assets/hero.jpg",
+            img: "/assets/Hero.jpg",
         },
         {
             title: "💬 Doubt Support",
             desc: "Get your questions answered quickly through our doubt support system.",
-            img: "/public/assets/doubt.png",
+            img: "/assets/doubt.png",
         },
     ];
 
