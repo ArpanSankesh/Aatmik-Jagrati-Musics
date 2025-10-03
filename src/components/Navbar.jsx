@@ -45,7 +45,8 @@ export default function Navbar() {
     return (
         <nav className={`flex items-center justify-between fixed z-50 top-0 w-full px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-slate-200 bg-white/40 ${openMobileMenu ? 'bg-white/80' : 'backdrop-blur'}`}>
             <Link to="/">
-                <h1 className="font-extrabold text-2xl text-indigo-600">Aatmik jagrati musics</h1>
+                {/* <h1 className="font-extrabold text-2xl text-indigo-600">Aatmik jagrati musics</h1> */}
+                <img src="./public/assets/logo.jpg" alt="Logo" className="h-10" />
             </Link>
             
             {/* Desktop Navigation */}
