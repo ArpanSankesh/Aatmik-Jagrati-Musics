@@ -1,77 +1,101 @@
-// In functions/index.js
-
-/**
- * Import function triggers from their respective submodules:
- */
-const {onCall, HttpsError} = require("firebase-functions/v2/https");
-const {setGlobalOptions} = require("firebase-functions/v1");
-const logger = require("firebase-functions/logger");
+const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const cloudinary = require("cloudinary").v2;
+const express = require("express");
+const cors = require("cors");
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
 
-// Initialize Firebase Admin SDK
 admin.initializeApp();
+const db = admin.firestore();
 
-// Configure Cloudinary using environment variables from your .env file
-// Make sure you have created a .env file in this 'functions' folder
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+const app = express();
+
+// Correctly enable CORS for all origins
+app.use(cors({ origin: true }));
+
+const razorpay = new Razorpay({
+    key_id: functions.config().razorpay.key_id,
+    key_secret: functions.config().razorpay.key_secret,
 });
 
-setGlobalOptions({ maxInstances: 10 });
-
-/**
- * A callable function to securely generate a signed URL for a private Cloudinary video.
- */
-exports.getSignedVideoUrl = onCall(async (request) => {
-  // 1. Check if the user is authenticated.
-  if (!request.auth) {
-    throw new HttpsError(
-      "unauthenticated",
-      "You must be logged in to view this content."
-    );
-  }
-
-  const userId = request.auth.uid;
-  const { publicId, courseId } = request.data; // Get data sent from the frontend
-
-  if (!publicId || !courseId) {
-    throw new HttpsError(
-      "invalid-argument",
-      "The function must be called with a 'publicId' and 'courseId'."
-    );
-  }
-
-  // 2. CRITICAL SECURITY CHECK: Verify the user has purchased this course in Firestore.
-  try {
-    const userDoc = await admin.firestore().collection("users").doc(userId).get();
-    if (!userDoc.exists) {
-      throw new HttpsError("not-found", "User document not found.");
+// Endpoint to Create an Order
+app.post("/create-order", async (req, res) => {
+    const { courseId, courseType } = req.body;
+    if (!courseId || !courseType) {
+        return res.status(400).send("Course ID and Course Type are required");
     }
-    const purchasedCourses = userDoc.data().purchasedCourses || [];
-    if (!purchasedCourses.includes(courseId)) {
-      throw new HttpsError("permission-denied", "You do not have access to this course.");
+    const collectionName = courseType === 'live' ? 'liveCourses' : 'courses';
+    try {
+        const courseRef = db.collection(collectionName).doc(courseId);
+        const courseDoc = await courseRef.get();
+        if (!courseDoc.exists) {
+            return res.status(404).send("Course not found");
+        }
+        const courseData = courseDoc.data();
+        const priceInRupees = Number(courseData.price.replace("₹", ""));
+        const amountInPaise = Math.round(priceInRupees * 100);
+        const options = {
+            amount: amountInPaise,
+            currency: "INR",
+            receipt: `receipt_${courseType}_${courseId}_${Date.now()}`,
+        };
+        const order = await razorpay.orders.create(options);
+        res.status(200).json(order);
+    } catch (error) {
+        console.error("Error creating order:", error);
+        res.status(500).send("Internal Server Error");
     }
-  } catch (error) {
-    logger.error("Error checking course access for user:", userId, error);
-    throw new HttpsError("internal", "An error occurred while checking course access.");
-  }
-
-  // 3. If access is verified, generate the signed URL from Cloudinary.
-  try {
-    const signedUrl = cloudinary.url(publicId, {
-      resource_type: "video",
-      sign_url: true,
-      expires_at: Math.round(new Date().getTime() / 1000) + 3600, // URL expires in 1 hour
-    });
-    return { url: signedUrl };
-  } catch (error) {
-    logger.error("Cloudinary URL generation error:", error);
-    throw new HttpsError(
-      "internal",
-      "Could not generate a secure video URL."
-    );
-  }
 });
+
+// Endpoint to Verify Payment
+app.post("/verify-payment", async (req, res) => {
+    const {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        courseId,
+        userId,
+        courseType,
+    } = req.body;
+    if (!userId || !courseId || !courseType) {
+        return res.status(400).send("User ID, Course ID, and Course Type are required");
+    }
+    try {
+        const hmac = crypto.createHmac("sha256", functions.config().razorpay.key_secret);
+        hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+        const generated_signature = hmac.digest("hex");
+        if (generated_signature !== razorpay_signature) {
+            return res.status(400).send("Payment verification failed: Invalid signature");
+        }
+        const collectionName = courseType === 'live' ? 'liveCourses' : 'courses';
+        const enrollmentField = courseType === 'live' ? 'enrolledLiveCourses' : 'enrolledCourses';
+        const courseDoc = await db.collection(collectionName).doc(courseId).get();
+        if (!courseDoc.exists) {
+             return res.status(404).send("Course not found");
+        }
+        const courseData = courseDoc.data();
+        const validityDays = courseData.validityDays ? parseInt(courseData.validityDays) : null;
+        let expiryDateObject = new Date();
+        if (validityDays && validityDays > 0) {
+            expiryDateObject.setDate(expiryDateObject.getDate() + validityDays);
+        } else {
+            expiryDateObject.setFullYear(expiryDateObject.getFullYear() + 100);
+        }
+        const newEnrolledCourse = {
+            courseId: courseId,
+            expiryDate: admin.firestore.Timestamp.fromDate(expiryDateObject),
+            purchaseDate: admin.firestore.FieldValue.serverTimestamp(),
+            paymentId: razorpay_payment_id,
+        };
+        const userDocRef = db.collection("users").doc(userId);
+        await userDocRef.set({
+            [enrollmentField]: admin.firestore.FieldValue.arrayUnion(newEnrolledCourse),
+        }, { merge: true });
+        res.status(200).json({ status: "success", courseId: courseId });
+    } catch (error) {
+        console.error("Error verifying payment:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+exports.api = functions.https.onRequest(app);

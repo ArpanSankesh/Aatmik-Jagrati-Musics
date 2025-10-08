@@ -69,7 +69,7 @@ export default function LiveClassInfoPage() {
               <img src={course.imageUrl} alt={course.title} className="w-full h-48 object-cover rounded-xl mb-6"/>
               <span className="text-4xl font-extrabold text-gray-900">{course.price}</span>
               <Link 
-                to={currentUser ? `/checkout/live/${course.id}` : '/login'} 
+                to={currentUser ? `/checkout/live/${course.id}` : '/login'}
                 className="w-full block text-center bg-red-500 text-white font-bold py-4 rounded-xl hover:bg-red-600 transition text-lg mt-6"
               >
                 Enroll Now

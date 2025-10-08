@@ -2,105 +2,110 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, Lock } from 'lucide-react';
-import { doc, setDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, arrayUnion, Timestamp } from 'firebase/firestore';
 import { db } from '../Config/firebaseConfig';
 
+// NOTE: The Razorpay loadScript function is no longer needed for this test file.
+
 export default function Checkout() {
-    // UPDATED: Get 'type' and 'courseId' from URL params
-    const { type, courseId } = useParams();
+    const { courseType, courseId } = useParams();
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [processingPayment, setProcessingPayment] = useState(false);
 
     useEffect(() => {
-        const fetchCourse = async () => {
-            if (!courseId || !type) {
+        const initialize = async () => {
+            if (!courseId || !courseType) {
+                setError("Invalid checkout link.");
                 setLoading(false);
                 return;
             }
-            // UPDATED: Determine collection based on 'type'
-            const collectionName = type === 'live' ? 'liveCourses' : 'courses';
+
+            const collectionName = courseType === 'live' ? 'liveCourses' : 'courses';
 
             try {
                 const courseDocRef = doc(db, collectionName, courseId);
                 const courseDocSnap = await getDoc(courseDocRef);
+
                 if (courseDocSnap.exists()) {
                     setCourse({ id: courseDocSnap.id, ...courseDocSnap.data() });
                 } else {
-                     setError("This item could not be found.");
+                    setError("Course not found.");
                 }
             } catch (err) {
-                console.error("Error fetching item details:", err);
-                setError("There was an error loading the item details.");
+                console.error("Error fetching course:", err);
+                setError("Failed to load course details.");
             } finally {
                 setLoading(false);
             }
         };
-        fetchCourse();
-    }, [courseId, type]);
+        initialize();
+    }, [courseId, courseType]);
 
-    const handleConfirmPurchase = async () => {
-        if (!currentUser) {
-            setError("You must be logged in to enroll.");
-            return;
-        }
-        setLoading(true);
+    // --- THIS IS THE FAKE CHECKOUT FUNCTION ---
+    const handleFakeCheckout = async () => {
+        if (!course || !currentUser) return;
+        setProcessingPayment(true);
         setError('');
-        try {
-            const validityDays = course.validityDays ? parseInt(course.validityDays, 10) : null;
-            let expiryDate = null;
 
+        try {
+            console.log("Simulating successful payment...");
+
+            // Determine which field to update in the user's document
+            const enrollmentField = courseType === 'live' ? 'enrolledLiveCourses' : 'enrolledCourses';
+
+            // Calculate expiry date
+            const validityDays = course.validityDays ? parseInt(course.validityDays) : null;
+            let expiryDateObject = new Date();
+            
             if (validityDays && validityDays > 0) {
-                const purchaseDate = new Date();
-                expiryDate = new Date(purchaseDate.setDate(purchaseDate.getDate() + validityDays));
+                expiryDateObject.setDate(expiryDateObject.getDate() + validityDays);
             } else {
-                // Default to 100 years for lifetime access
-                const purchaseDate = new Date();
-                expiryDate = new Date(purchaseDate.setFullYear(purchaseDate.getFullYear() + 100));
+                expiryDateObject.setFullYear(expiryDateObject.getFullYear() + 100);
             }
 
-            const newEnrollment = {
+            // Create the enrollment object
+            const newEnrolledCourse = {
                 courseId: course.id,
-                expiryDate: expiryDate,
-                purchaseDate: new Date()
+                purchaseDate: Timestamp.now(),
+                expiryDate: Timestamp.fromDate(expiryDateObject),
+                paymentId: `fake_payment_${Date.now()}` // Add a fake payment ID
             };
 
+            // Directly update the Firestore database
             const userDocRef = doc(db, 'users', currentUser.uid);
+            await setDoc(userDocRef, {
+                [enrollmentField]: arrayUnion(newEnrolledCourse),
+            }, { merge: true });
             
-            // UPDATED: Save to the correct array in the user's document
-            if (type === 'live') {
-                await setDoc(userDocRef, {
-                    enrolledLiveCourses: arrayUnion(newEnrollment)
-                }, { merge: true });
-            } else {
-                 await setDoc(userDocRef, {
-                    enrolledCourses: arrayUnion(newEnrollment)
-                }, { merge: true });
-            }
-            
+            console.log("Firestore updated successfully.");
+
+            // Navigate to the success page
             navigate(`/purchase-success/${course.id}`);
 
         } catch (err) {
-            console.error("Error saving purchase: ", err);
-            setError("Failed to process your enrollment. Please try again.");
-            setLoading(false);
+            console.error("Error during fake checkout:", err);
+            setError("Failed to simulate enrollment.");
+            setProcessingPayment(false);
         }
     };
     
     if (loading) {
-        return <div className="flex items-center justify-center min-h-screen">Loading details...</div>;
+        return <div className="flex items-center justify-center min-h-screen">Loading Checkout...</div>;
     }
 
-    if (!course || error) {
+    if (!course) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold">{error || "Item Not Found"}</h1>
-                    <Link to="/" className="mt-4 text-indigo-600 hover:underline">
-                        Go back to Home
+                <div className="text-center bg-white p-8 rounded-lg shadow-md">
+                    <h1 className="text-2xl font-bold text-red-600">Item Not Found</h1>
+                    <p className="text-gray-600 mt-2">{error}</p>
+                    <Link to="/courses" className="mt-6 inline-block bg-indigo-600 text-white font-semibold py-2 px-6 rounded-md hover:bg-indigo-700 transition">
+                        Go back to Courses
                     </Link>
                 </div>
             </div>
@@ -108,12 +113,12 @@ export default function Checkout() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl w-full space-y-8">
                 <div className="bg-white shadow-2xl rounded-2xl p-8">
-                    <Link to={type === 'live' ? '/live-classes' : '/courses'} className="flex items-center text-sm text-gray-500 hover:text-indigo-600 mb-6">
+                    <Link to={courseType === 'live' ? '/live-classes' : '/courses'} className="flex items-center text-sm text-gray-500 hover:text-indigo-600 mb-6">
                         <ArrowLeft size={16} className="mr-2" />
-                        Back to {type === 'live' ? 'Live Classes' : 'Courses'}
+                        Back to {courseType === 'live' ? 'Live Classes' : 'Courses'}
                     </Link>
                     <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-6">Order Summary</h2>
 
@@ -137,17 +142,23 @@ export default function Checkout() {
                         </dl>
                     </div>
 
+                    {error && (
+                        <div className="my-4 p-3 text-sm text-red-700 bg-red-100 border border-red-300 rounded-lg">
+                            {error}
+                        </div>
+                    )}
+
                     <div className="mt-8">
                         <button
-                            onClick={handleConfirmPurchase}
-                            disabled={loading}
+                            onClick={handleFakeCheckout} // <-- This now calls the fake checkout function
+                            disabled={processingPayment}
                             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 disabled:bg-indigo-400 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'Processing...' : 'Confirm & Enroll'}
+                            {processingPayment ? 'Processing...' : `(TEST) Enroll in ${course.price}`}
                         </button>
                         <p className="mt-4 text-xs text-gray-500 text-center flex items-center justify-center">
                             <Lock size={12} className="mr-1.5" />
-                            Your enrollment will be saved to your account
+                            This is for testing purposes only
                         </p>
                     </div>
                 </div>
