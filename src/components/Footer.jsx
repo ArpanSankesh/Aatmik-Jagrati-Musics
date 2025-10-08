@@ -1,38 +1,100 @@
 import { Link } from "react-router-dom";
+import { Mail, Phone, Instagram, Youtube, Facebook } from "lucide-react";
 
 export default function Footer() {
     return (
-        <footer className="px-6 md:px-16 lg:px-24 xl:px-32 mt-40 w-full text-slate-500 border-t-1 border-gray-200 pt-5">
-            <div className="flex flex-col md:flex-row justify-between w-full gap-10 border-b border-gray-200 pb-6">
-                <div className="md:max-w-114">
-                    <Link to="/">
-                        <h1 className="font-extrabold text-2xl text-indigo-600 hover:text-indigo-600">Aatmik jagrati musics</h1>
-                    </Link>
-                    <p className="mt-6">
-                        Empowering students with high-quality, secure online courses. Our platform provides a seamless learning experience, from easy enrollment to a dedicated student portal and a robust admin panel for content management.
-                    </p>
-                </div>
-                <div className="flex-1 flex items-start md:justify-end gap-20">
+        <footer className="px-6 md:px-16 lg:px-24 xl:px-32 mt-40 w-full text-slate-600 border-t border-gray-200 pt-12">
+            <div className="max-w-7xl mx-auto">
+                {/* Main Footer Content */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 border-b border-gray-200">
+                    {/* Brand Section */}
+                    <div className="lg:col-span-2">
+                        <div className="flex items-center gap-1">
+
+            <Link to="/">
+                <img src="/assets/logo.png" alt="Logo" className="h-10" />
+            </Link>
+            <Link to="/">
+                <h1 className="font-bold text-xl md:text-2xl text-indigo-600 hover:text-indigo-700 transition">
+                    Aatmik Jagrati Musics
+                </h1>
+                        </Link>
+            </div>
+                        <p className="mt-4 text-sm leading-relaxed">
+                            Master your musical instrument with expert-led courses. Learn at your own pace with professional lessons and resources.
+                        </p>
+                        
+                        {/* Social Links */}
+                        <div className="flex gap-4 mt-6">
+                            <a 
+                                href="https://www.instagram.com/aatmik_jagrati_music/" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gradient-to-r hover:from-purple-500 hover:via-pink-500 hover:to-orange-500 flex items-center justify-center text-gray-600 hover:text-white transition-all duration-300"
+                                aria-label="Instagram"
+                            >
+                                <Instagram size={18} />
+                            </a>
+                            <a 
+                                href="https://www.youtube.com/@AatmikJagratimusics" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-red-600 flex items-center justify-center text-gray-600 hover:text-white transition-all duration-300"
+                                aria-label="YouTube"
+                            >
+                                <Youtube size={18} />
+                            </a>
+                            <a 
+                                href="YOUR_FACEBOOK_URL" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-blue-600 flex items-center justify-center text-gray-600 hover:text-white transition-all duration-300"
+                                aria-label="Facebook"
+                            >
+                                <Facebook size={18} />
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Quick Links */}
                     <div>
-                        <h2 className="font-semibold mb-5 text-gray-800">Platform</h2>
-                        <ul className="space-y-2">
-                            <li><Link to="/" className="hover:text-indigo-600">Home</Link></li>
-                            <li><Link to="/courses" className="hover:text-indigo-600">Courses</Link></li>
-                            <li><Link to="/login" className="hover:text-indigo-600">Student Login</Link></li>
+                        <h2 className="font-semibold mb-4 text-gray-800">Quick Links</h2>
+                        <ul className="space-y-3 text-sm">
+                            <li><Link to="/" className="hover:text-indigo-600 transition">Home</Link></li>
+                            <li><Link to="/courses" className="hover:text-indigo-600 transition">Courses</Link></li>
+                            <li><Link to="/my-courses" className="hover:text-indigo-600 transition">My Learning</Link></li>
+                            <li><Link to="/login" className="hover:text-indigo-600 transition">Student Login</Link></li>
+                            <li><Link to="/admin" className="hover:text-indigo-600 transition">Admin Panel</Link></li>
                         </ul>
                     </div>
+
+                    {/* Contact Info */}
                     <div>
-                        <h2 className="font-semibold mb-5 text-gray-800">Support</h2>
-                        <div className="space-y-2">
-                            <p>+91 96911 48602</p>
-                            <p>Aatmikjagratimusics714@gmail.com</p>
+                        <h2 className="font-semibold mb-4 text-gray-800">Contact Us</h2>
+                        <div className="space-y-3 text-sm">
+                            <a href="tel:+919691148602" className="flex items-start gap-2 hover:text-indigo-600 transition group">
+                                <Phone size={16} className="mt-0.5 flex-shrink-0" />
+                                <span className="break-words">+91 96911 48602</span>
+                            </a>
+                            <a href="mailto:Aatmikjagratimusics714@gmail.com" className="flex items-start gap-2 hover:text-indigo-600 transition group">
+                                <Mail size={16} className="mt-0.5 flex-shrink-0" />
+                                <span className="break-words">Aatmikjagratimusics714@gmail.com</span>
+                            </a>
                         </div>
                     </div>
                 </div>
+
+                {/* Bottom Bar */}
+                <div className="py-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
+                    <p className="text-center md:text-left">
+                        © 2025 Aatmik Jagrati Musics. All Rights Reserved.
+                    </p>
+                    <div className="flex gap-6 text-center">
+                        <Link to="/privacy" className="hover:text-indigo-600 transition">Privacy Policy</Link>
+                        <Link to="/terms" className="hover:text-indigo-600 transition">Terms of Service</Link>
+                    </div>
+                </div>
             </div>
-            <p className="pt-4 text-center pb-5">
-                Copyright 2025 © ABHISHEK. All Rights Reserved.
-            </p>
         </footer>
     );
 }

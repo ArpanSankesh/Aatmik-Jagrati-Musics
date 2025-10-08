@@ -6,7 +6,8 @@ import { doc, setDoc, arrayUnion, getDoc } from 'firebase/firestore';
 import { db } from '../Config/firebaseConfig';
 
 export default function Checkout() {
-    const { courseId } = useParams();
+    // UPDATED: Get 'type' and 'courseId' from URL params
+    const { type, courseId } = useParams();
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     
@@ -16,24 +17,30 @@ export default function Checkout() {
 
     useEffect(() => {
         const fetchCourse = async () => {
-            if (!courseId) {
+            if (!courseId || !type) {
                 setLoading(false);
                 return;
             }
+            // UPDATED: Determine collection based on 'type'
+            const collectionName = type === 'live' ? 'liveCourses' : 'courses';
+
             try {
-                const courseDocRef = doc(db, 'courses', courseId);
+                const courseDocRef = doc(db, collectionName, courseId);
                 const courseDocSnap = await getDoc(courseDocRef);
                 if (courseDocSnap.exists()) {
                     setCourse({ id: courseDocSnap.id, ...courseDocSnap.data() });
+                } else {
+                     setError("This item could not be found.");
                 }
             } catch (err) {
-                console.error("Error fetching course:", err);
+                console.error("Error fetching item details:", err);
+                setError("There was an error loading the item details.");
             } finally {
                 setLoading(false);
             }
         };
         fetchCourse();
-    }, [courseId]);
+    }, [courseId, type]);
 
     const handleConfirmPurchase = async () => {
         if (!currentUser) {
@@ -43,15 +50,39 @@ export default function Checkout() {
         setLoading(true);
         setError('');
         try {
+            const validityDays = course.validityDays ? parseInt(course.validityDays, 10) : null;
+            let expiryDate = null;
+
+            if (validityDays && validityDays > 0) {
+                const purchaseDate = new Date();
+                expiryDate = new Date(purchaseDate.setDate(purchaseDate.getDate() + validityDays));
+            } else {
+                // Default to 100 years for lifetime access
+                const purchaseDate = new Date();
+                expiryDate = new Date(purchaseDate.setFullYear(purchaseDate.getFullYear() + 100));
+            }
+
+            const newEnrollment = {
+                courseId: course.id,
+                expiryDate: expiryDate,
+                purchaseDate: new Date()
+            };
+
             const userDocRef = doc(db, 'users', currentUser.uid);
             
-            // --- THIS IS THE FIX ---
-            // We now save the courseId directly as a string, without parseInt()
-            await setDoc(userDocRef, {
-                purchasedCourses: arrayUnion(courseId) 
-            }, { merge: true });
+            // UPDATED: Save to the correct array in the user's document
+            if (type === 'live') {
+                await setDoc(userDocRef, {
+                    enrolledLiveCourses: arrayUnion(newEnrollment)
+                }, { merge: true });
+            } else {
+                 await setDoc(userDocRef, {
+                    enrolledCourses: arrayUnion(newEnrollment)
+                }, { merge: true });
+            }
             
             navigate(`/purchase-success/${course.id}`);
+
         } catch (err) {
             console.error("Error saving purchase: ", err);
             setError("Failed to process your enrollment. Please try again.");
@@ -63,13 +94,13 @@ export default function Checkout() {
         return <div className="flex items-center justify-center min-h-screen">Loading details...</div>;
     }
 
-    if (!course) {
+    if (!course || error) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
-                    <h1 className="text-2xl font-bold">Course Not Found</h1>
-                    <Link to="/courses" className="mt-4 text-indigo-600 hover:underline">
-                        Go back to courses
+                    <h1 className="text-2xl font-bold">{error || "Item Not Found"}</h1>
+                    <Link to="/" className="mt-4 text-indigo-600 hover:underline">
+                        Go back to Home
                     </Link>
                 </div>
             </div>
@@ -77,12 +108,12 @@ export default function Checkout() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
             <div className="max-w-2xl w-full space-y-8">
                 <div className="bg-white shadow-2xl rounded-2xl p-8">
-                    <Link to="/courses" className="flex items-center text-sm text-gray-500 hover:text-indigo-600 mb-6">
+                    <Link to={type === 'live' ? '/live-classes' : '/courses'} className="flex items-center text-sm text-gray-500 hover:text-indigo-600 mb-6">
                         <ArrowLeft size={16} className="mr-2" />
-                        Back to Courses
+                        Back to {type === 'live' ? 'Live Classes' : 'Courses'}
                     </Link>
                     <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-6">Order Summary</h2>
 
@@ -105,12 +136,6 @@ export default function Checkout() {
                             </div>
                         </dl>
                     </div>
-
-                    {error && (
-                        <div className="my-4 p-3 text-sm text-red-700 bg-red-100 border border-red-300 rounded-lg">
-                            {error}
-                        </div>
-                    )}
 
                     <div className="mt-8">
                         <button

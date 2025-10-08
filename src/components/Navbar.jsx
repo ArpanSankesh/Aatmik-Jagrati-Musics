@@ -44,26 +44,38 @@ export default function Navbar() {
 
     return (
         <nav className={`flex items-center justify-between fixed z-50 top-0 w-full px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-slate-200 bg-white/40 ${openMobileMenu ? 'bg-white/80' : 'backdrop-blur'}`}>
-            <Link to="/">
-                {/* <h1 className="font-extrabold text-2xl text-indigo-600">Aatmik jagrati musics</h1> */}
-                <img src="/assets/logo.png" alt="Logo" className="h-10" />
-            </Link>
+            <div className="flex items-center gap-1">
+                <Link to="/">
+                    <img src="/assets/logo.png" alt="Logo" className="h-10" />
+                </Link>
+                <Link to="/">
+                    <h1 className="font-bold text-xl md:text-2xl text-indigo-600 hover:text-indigo-700 transition">
+                        Aatmik Jagrati Musics
+                    </h1>
+                </Link>
+            </div>
             
-            {/* Desktop Navigation */}
+            {/* --- Desktop Navigation --- */}
             <div className="hidden items-center md:gap-8 lg:gap-9 font-medium md:flex">
                 <NavLink to="/" className="hover:text-indigo-600 transition-colors">Home</NavLink>
                 <NavLink to="/courses" className="hover:text-indigo-600 transition-colors">Courses</NavLink>
+                {/* --- 1. ADDED LIVE CLASSES LINK HERE --- */}
+                <NavLink to="/live-classes" className="hover:text-indigo-600 transition-colors">Live Classes</NavLink>
                 {currentUser && (
-                    <NavLink to="/my-courses" className="hover:text-indigo-600 transition-colors">My Courses</NavLink>
+                    /* --- 2. UPDATED "My Courses" to "My Classroom" --- */
+                    <NavLink to="/my-classroom" className="hover:text-indigo-600 transition-colors">My Classroom</NavLink>
                 )}
             </div>
             
-            {/* Mobile Menu Overlay */}
+            {/* --- Mobile Menu Overlay --- */}
             <div className={`fixed inset-0 flex flex-col items-center justify-center gap-6 text-lg font-medium bg-white/80 backdrop-blur-md md:hidden transition duration-300 ${openMobileMenu ? "translate-x-0" : "-translate-x-full"}`}>
                 <NavLink to="/" onClick={() => setOpenMobileMenu(false)}>Home</NavLink>
                 <NavLink to="/courses" onClick={() => setOpenMobileMenu(false)}>Courses</NavLink>
+                 {/* --- 3. ADDED LIVE CLASSES LINK FOR MOBILE --- */}
+                <NavLink to="/live-classes" onClick={() => setOpenMobileMenu(false)}>Live Classes</NavLink>
                 {currentUser && (
-                    <NavLink to="/my-courses" onClick={() => setOpenMobileMenu(false)}>My Courses</NavLink>
+                    /* --- 4. UPDATED FOR MOBILE --- */
+                    <NavLink to="/my-classroom" onClick={() => setOpenMobileMenu(false)}>My Classroom</NavLink>
                 )}
                 
                 <div className="border-t border-gray-300 w-32 my-2"></div>
@@ -110,12 +122,13 @@ export default function Navbar() {
                                     <p className="font-medium text-gray-800 truncate">{currentUser.displayName || currentUser.email}</p>
                                 </div>
                                 <div className="py-1">
+                                     {/* --- 5. UPDATED IN DROPDOWN MENU --- */}
                                     <Link 
-                                        to="/my-courses" 
+                                        to="/my-classroom" 
                                         onClick={() => setOpenProfileMenu(false)}
                                         className="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
                                     >
-                                        <BookOpen size={16} /> My Courses
+                                        <BookOpen size={16} /> My Classroom
                                     </Link>
                                     <Link 
                                         to="/profile" 
@@ -153,4 +166,3 @@ export default function Navbar() {
         </nav>
     );
 }
-

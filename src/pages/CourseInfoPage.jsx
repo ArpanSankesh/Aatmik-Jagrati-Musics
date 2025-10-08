@@ -30,7 +30,6 @@ export default function CourseInfoPage() {
         if (courseSnap.exists()) {
           const courseData = { id: courseSnap.id, ...courseSnap.data() };
           setCourse(courseData);
-          // Auto-expand first level
           if (courseData.levels && courseData.levels.length > 0) {
             setExpandedLevels({ [courseData.levels[0].id]: true });
           }
@@ -49,7 +48,6 @@ export default function CourseInfoPage() {
     setExpandedLevels(prev => ({ ...prev, [levelId]: !prev[levelId] }));
   };
 
-  // Calculate total lessons and duration
   const getTotalStats = () => {
     let totalLessons = 0;
     let totalDuration = 0;
@@ -92,10 +90,29 @@ export default function CourseInfoPage() {
   }
 
   const stats = getTotalStats();
+  
+  // --- NEW: Helper array for course features ---
+  const courseFeatures = [
+      { 
+          icon: ClockIcon, 
+          text: course.courseDuration 
+              ? `${course.courseDuration} of content` 
+              : `${Math.floor(stats.totalDuration / 60)}+ hours on-demand video` 
+      },
+      // --- NEW: Display validity period if available ---
+      ...(course.validityDays ? [{
+          icon: CheckCircleIcon,
+          text: `${course.validityDays}-day access`
+      }] : [{
+          icon: CheckCircleIcon,
+          text: 'Full lifetime access'
+      }]),
+      { icon: CheckCircleIcon, text: 'Access on mobile and desktop' },
+      { icon: CheckCircleIcon, text: 'Certificate of completion' }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-      {/* Hero Section with Gradient Background */}
       <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white pt-24 pb-12 sm:pt-32 sm:pb-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-12 max-w-7xl">
           <Link 
@@ -107,7 +124,6 @@ export default function CourseInfoPage() {
           </Link>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-12">
-            {/* Left: Course Info */}
             <div className="lg:col-span-2">
               <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-3 sm:mb-4">
                 {course.title}
@@ -122,7 +138,6 @@ export default function CourseInfoPage() {
               </div>
             </div>
 
-            {/* Right: Mobile CTA (visible on mobile and tablet) */}
             <div className="lg:hidden">
               <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6">
                 <img 
@@ -145,28 +160,10 @@ export default function CourseInfoPage() {
                   Enroll Now
                 </Link>
 
-                {/* Course Includes Section on Mobile */}
                 <div className="border-t border-gray-200 pt-4 sm:pt-6">
                   <p className="font-semibold text-gray-800 text-sm mb-3">This course includes:</p>
                   <div className="space-y-2">
-                    {[
-                      { 
-                        icon: ClockIcon, 
-                        text: course.courseDuration 
-                          ? `${course.courseDuration} course duration` 
-                          : `${Math.floor(stats.totalDuration / 60)}+ hours on-demand video` 
-                      },
-                      { 
-                        icon: CheckCircleIcon, 
-                        text: course.accessDuration 
-                          ? `${course.accessDuration} access` 
-                          : 'Full lifetime access' 
-                      },
-                      { icon: CheckCircleIcon, text: 'Access on mobile and desktop' },
-                      { icon: CheckCircleIcon, text: 'Certificate of completion' },
-                      { icon: CheckCircleIcon, text: 'Assignments and projects' },
-                      { icon: CheckCircleIcon, text: 'Direct instructor support' }
-                    ].map((item, idx) => (
+                    {courseFeatures.map((item, idx) => ( // <-- Use the new features array
                       <div key={idx} className="flex items-center text-xs sm:text-sm text-gray-700">
                         <item.icon className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
                         <span>{item.text}</span>
@@ -180,12 +177,9 @@ export default function CourseInfoPage() {
         </div>
       </div>
 
-      {/* Main Content Grid */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-12 max-w-7xl py-6 sm:py-8 lg:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-          {/* Left Column: Course Content */}
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-            {/* Course Curriculum */}
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-100">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Course Curriculum</h2>
@@ -259,7 +253,6 @@ export default function CourseInfoPage() {
               </div>
             </div>
 
-            {/* Description Section */}
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-100">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Description</h2>
               <div className="text-gray-700 leading-relaxed space-y-3 sm:space-y-4 text-sm sm:text-base">
@@ -273,16 +266,12 @@ export default function CourseInfoPage() {
                     <p>
                       With over {stats.totalLessons} carefully crafted lessons, you'll learn at your own pace with lifetime access to all course materials. Our step-by-step approach ensures you build a solid foundation while working on real-world projects.
                     </p>
-                    <p>
-                      Join thousands of students who have already transformed their careers and lives with this course. Don't wait - start your learning journey today!
-                    </p>
                   </>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Right Column: Sticky Purchase Card (Desktop Only) */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-24">
               <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
@@ -314,24 +303,7 @@ export default function CourseInfoPage() {
 
                   <div className="space-y-3 border-t border-gray-100 pt-6">
                     <p className="font-semibold text-gray-800 text-sm">This course includes:</p>
-                    {[
-                      { 
-                        icon: ClockIcon, 
-                        text: course.courseDuration 
-                          ? `${course.courseDuration} course duration` 
-                          : `${Math.floor(stats.totalDuration / 60)}+ hours on-demand video` 
-                      },
-                      { 
-                        icon: CheckCircleIcon, 
-                        text: course.accessDuration 
-                          ? `${course.accessDuration} access` 
-                          : 'Full lifetime access' 
-                      },
-                      { icon: CheckCircleIcon, text: 'Access on mobile and desktop' },
-                      { icon: CheckCircleIcon, text: 'Certificate of completion' },
-                      { icon: CheckCircleIcon, text: 'Assignments and projects' },
-                      { icon: CheckCircleIcon, text: 'Direct instructor support' }
-                    ].map((item, idx) => (
+                    {courseFeatures.map((item, idx) => ( // <-- Use the new features array
                       <div key={idx} className="flex items-center text-sm text-gray-700">
                         <item.icon className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
                         <span>{item.text}</span>

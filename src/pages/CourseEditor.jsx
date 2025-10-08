@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../Config/firebaseConfig';
 import { v4 as uuidv4 } from 'uuid';
-import { PlusCircle, Trash2, Upload, Video, Music, BookOpen, GripVertical, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Trash2, Upload, Video, Music, BookOpen, GripVertical, ArrowLeft, Image as ImageIcon, XCircle } from 'lucide-react';
 import { uploadToCloudinary } from '../services/cloudinaryService';
 
 const newCourseTemplate = {
@@ -15,6 +15,7 @@ const newCourseTemplate = {
   originalPrice: "",
   courseDuration: "",
   accessDuration: "",
+  validityDays: "", // <-- NEW: Added validity in days
   levels: [],
   createdAt: serverTimestamp(),
 };
@@ -27,6 +28,7 @@ export default function CourseEditor() {
   const [saving, setSaving] = useState(false);
   const [imageUploadProgress, setImageUploadProgress] = useState(0);
   const [videoUploadProgress, setVideoUploadProgress] = useState({});
+  const [notesImageUploadProgress, setNotesImageUploadProgress] = useState({});
   const [expandedLevels, setExpandedLevels] = useState({});
   const [expandedChapters, setExpandedChapters] = useState({});
 
@@ -162,6 +164,55 @@ export default function CourseEditor() {
     }
   };
 
+  const handleNotesImageUpload = async (e, levelIndex, chapterIndex, topicIndex, topicId) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setNotesImageUploadProgress(prev => ({ ...prev, [topicId]: 1 }));
+
+    const progressInterval = setInterval(() => {
+      setNotesImageUploadProgress(prev => {
+        const current = prev[topicId] || 0;
+        if (current >= 90) {
+          clearInterval(progressInterval);
+          return { ...prev, [topicId]: 90 };
+        }
+        return { ...prev, [topicId]: current + 10 };
+      });
+    }, 200);
+
+    try {
+      const imageUrl = await uploadToCloudinary(file);
+      clearInterval(progressInterval);
+      setNotesImageUploadProgress(prev => ({ ...prev, [topicId]: 100 }));
+
+      const syntheticEvent = { target: { name: 'notesImageUrl', value: imageUrl } };
+      handleTopicChange(levelIndex, chapterIndex, topicIndex, syntheticEvent);
+
+      setTimeout(() => {
+        setNotesImageUploadProgress(prev => {
+          const newProgress = { ...prev };
+          delete newProgress[topicId];
+          return newProgress;
+        });
+      }, 500);
+    } catch (error) {
+      clearInterval(progressInterval);
+      setNotesImageUploadProgress(prev => {
+        const newProgress = { ...prev };
+        delete newProgress[topicId];
+        return newProgress;
+      });
+      alert('Notes image upload failed. Please try again.');
+    }
+  };
+  
+  const handleRemoveNotesImage = (levelIndex, chapterIndex, topicIndex) => {
+    const syntheticEvent = { target: { name: 'notesImageUrl', value: '' } };
+    handleTopicChange(levelIndex, chapterIndex, topicIndex, syntheticEvent);
+  };
+
+
   const handleCourseChange = (e) => {
     setCourse(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -205,7 +256,7 @@ export default function CourseEditor() {
   };
 
   const addTopic = (levelIndex, chapterIndex) => {
-    const newTopic = { id: uuidv4(), title: "", duration: "", videoUrl: "", notes: "" };
+    const newTopic = { id: uuidv4(), title: "", duration: "", videoUrl: "", notes: "", notesImageUrl: "" };
     const newLevels = [...course.levels];
     newLevels[levelIndex].chapters[chapterIndex].topics = [
       ...(newLevels[levelIndex].chapters[chapterIndex].topics || []),
@@ -237,7 +288,7 @@ export default function CourseEditor() {
     }
   };
 
-  const isUploading = imageUploadProgress > 0 || Object.keys(videoUploadProgress).length > 0;
+  const isUploading = imageUploadProgress > 0 || Object.keys(videoUploadProgress).length > 0 || Object.keys(notesImageUploadProgress).length > 0;
 
   if (loading) return <div className="p-4 sm:p-8 text-center">Loading course editor...</div>;
   if (!course) return <div className="p-4 sm:p-8 text-center">Course not found.</div>;
@@ -457,25 +508,26 @@ export default function CourseEditor() {
                     name="courseDuration"
                     value={course.courseDuration || ''}
                     onChange={handleCourseChange}
-                    placeholder="100 days"
+                    placeholder="100 hours"
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition outline-none text-sm sm:text-base"
                   />
-                  <p className="text-xs text-gray-500 mt-1">e.g., 30 days, 6 weeks</p>
+                  <p className="text-xs text-gray-500 mt-1">e.g., 30 hours, 6 weeks</p>
                 </div>
-
+                
+                {/* --- NEW FIELD --- */}
                 <div>
                   <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
-                    Access Duration
+                    Course Validity (days)
                   </label>
                   <input
-                    type="text"
-                    name="accessDuration"
-                    value={course.accessDuration || ''}
+                    type="number"
+                    name="validityDays"
+                    value={course.validityDays || ''}
                     onChange={handleCourseChange}
-                    placeholder="Lifetime"
+                    placeholder="e.g., 365"
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition outline-none text-sm sm:text-base"
                   />
-                  <p className="text-xs text-gray-500 mt-1">e.g., Lifetime, 1 year</p>
+                  <p className="text-xs text-gray-500 mt-1">Access period in days</p>
                 </div>
               </div>
             </div>
@@ -647,7 +699,7 @@ export default function CourseEditor() {
                                         <button className="text-gray-400 hover:text-gray-600 cursor-move mt-2 hidden sm:block">
                                           <GripVertical size={14} />
                                         </button>
-                                        <div className="flex-1 space-y-2 sm:space-y-3 min-w-0">
+                                        <div className="flex-1 space-y-3 sm:space-y-4 min-w-0">
                                           {/* Lesson Title & Duration */}
                                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                                             <div className="sm:col-span-2">
@@ -766,10 +818,72 @@ export default function CourseEditor() {
                                             )}
                                           </div>
 
-                                          {/* Notes */}
+                                          {/* Notes Image Upload */}
+                                          <div>
+                                              <label className="block text-xs font-semibold text-gray-600 mb-1.5 sm:mb-2">
+                                                  Lesson Notes Image (Optional)
+                                              </label>
+                                              {notesImageUploadProgress[topic.id] !== undefined ? (
+                                                  <div className="w-full p-3 sm:p-4 bg-white rounded-lg border-2 border-indigo-200 flex items-center space-x-3">
+                                                      <div className="w-10 h-10 relative flex-shrink-0">
+                                                          <svg className="transform -rotate-90" width="100%" height="100%" viewBox="0 0 40 40">
+                                                              <circle cx="20" cy="20" r="16" stroke="#e5e7eb" strokeWidth="3" fill="none" />
+                                                              <circle cx="20" cy="20" r="16" stroke="#4f46e5" strokeWidth="3" fill="none"
+                                                                  strokeDasharray={`${2 * Math.PI * 16}`}
+                                                                  strokeDashoffset={`${2 * Math.PI * 16 * (1 - notesImageUploadProgress[topic.id] / 100)}`}
+                                                                  strokeLinecap="round" className="transition-all duration-300" />
+                                                          </svg>
+                                                          <div className="absolute inset-0 flex items-center justify-center">
+                                                              <span className="text-xs font-bold text-indigo-600">{notesImageUploadProgress[topic.id]}%</span>
+                                                          </div>
+                                                      </div>
+                                                      <div className="flex-1 min-w-0">
+                                                          <p className="text-xs sm:text-sm font-medium text-gray-700">Uploading image...</p>
+                                                          <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                                                              <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: `${notesImageUploadProgress[topic.id]}%` }}></div>
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                              ) : topic.notesImageUrl ? (
+                                                  <div className="relative group">
+                                                      <img src={topic.notesImageUrl} alt="Notes preview" className="w-full rounded-lg border border-gray-300" />
+                                                      <div className="absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                          <label className="px-3 py-1.5 bg-white text-gray-800 text-xs font-medium rounded cursor-pointer hover:bg-gray-100 transition whitespace-nowrap">
+                                                              Change Image
+                                                              <input
+                                                                  type="file"
+                                                                  accept="image/*"
+                                                                  onChange={(e) => handleNotesImageUpload(e, levelIndex, chapterIndex, topicIndex, topic.id)}
+                                                                  className="hidden"
+                                                              />
+                                                          </label>
+                                                          <button onClick={() => handleRemoveNotesImage(levelIndex, chapterIndex, topicIndex)}
+                                                              className="ml-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition">
+                                                              <XCircle size={16} />
+                                                          </button>
+                                                      </div>
+                                                  </div>
+                                              ) : (
+                                                  <label className="bg-white p-3 sm:p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer transition flex items-center justify-center space-x-2 sm:space-x-3">
+                                                      <ImageIcon className="text-gray-400 flex-shrink-0" size={18} />
+                                                      <div>
+                                                          <p className="text-xs sm:text-sm font-medium text-gray-700">Upload notes image</p>
+                                                          <p className="text-xs text-gray-500">PNG, JPG</p>
+                                                      </div>
+                                                      <input
+                                                          type="file"
+                                                          accept="image/*"
+                                                          onChange={(e) => handleNotesImageUpload(e, levelIndex, chapterIndex, topicIndex, topic.id)}
+                                                          className="hidden"
+                                                      />
+                                                  </label>
+                                              )}
+                                          </div>
+
+                                          {/* Notes Text Area */}
                                           <div>
                                             <label className="block text-xs font-semibold text-gray-600 mb-1">
-                                              Lesson Notes (Optional)
+                                              Lesson Notes (Text)
                                             </label>
                                             <textarea
                                               name="notes"

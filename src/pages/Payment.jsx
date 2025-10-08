@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { courses } from '../data/courseData';
 import { useAuth } from '../context/AuthContext';
 import { Lock } from 'lucide-react';
+import { doc, getDoc, setDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
+import { db } from '../Config/firebaseConfig';
 
-// A helper function to load a script dynamically
 const loadScript = (src) => {
     return new Promise((resolve) => {
         const script = document.createElement('script');
@@ -23,40 +23,78 @@ export default function Payment() {
     const { courseId } = useParams();
     const { currentUser } = useAuth();
     const navigate = useNavigate();
-    const course = courses.find(c => c.id === parseInt(courseId));
+    const [course, setCourse] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadScript('https://checkout.razorpay.com/v1/checkout.js');
-    });
+        const fetchCourseAndLoadScript = async () => {
+            setLoading(true);
+            await loadScript('https://checkout.razorpay.com/v1/checkout.js');
+            if (courseId) {
+                const courseDocRef = doc(db, 'courses', courseId);
+                const courseDocSnap = await getDoc(courseDocRef);
+                if (courseDocSnap.exists()) {
+                    setCourse({ id: courseDocSnap.id, ...courseDocSnap.data() });
+                }
+            }
+            setLoading(false);
+        };
+        fetchCourseAndLoadScript();
+    }, [courseId]);
 
     const displayRazorpay = async () => {
-        // IMPORTANT: In a real production app, the order creation (getting the order_id)
-        // MUST happen on your backend (e.g., a Firebase Cloud Function) to prevent users
-        // from manipulating the price.
-        // For this example, we'll simulate it on the client-side.
+        if (!course) return;
 
-        // 1. Create a dummy order on the backend (simulated here)
-        // const orderData = await fetch('/api/create-order', { method: 'POST', body: JSON.stringify({ courseId }) });
-        // const { order_id, amount, currency } = await orderData.json();
-
+        // In a real app, order creation MUST happen on your backend.
         const options = {
             key: "rzp_test_YOUR_KEY_ID", // <-- Replace with your Razorpay Key ID
-            amount: "7900", // Amount is in currency subunits. 79 INR = 7900 paise.
+            amount: "7900", 
             currency: "INR",
             name: "Aatmik Jagrati Musics",
             description: `Payment for ${course.title}`,
-            image: "https://placehold.co/150x150/6366f1/ffffff?text=AJM", // Your Logo URL
-            order_id: "order_DBJOWzybf0sJbb", // This should come from your backend
-            handler: function (response) {
-                // This function is called after a successful payment
-                alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
-                // Here you would verify the payment signature on your backend and then grant course access
-                navigate('/courses');
+            image: "https://placehold.co/150x150/6366f1/ffffff?text=AJM",
+            order_id: "order_DBJOWzybf0sJbb",
+            
+            // --- UPDATED HANDLER FUNCTION ---
+            handler: async function (response) {
+                console.log("Payment successful:", response);
+                try {
+                    // This logic now runs AFTER a successful payment
+                    const validityDays = course.validityDays ? parseInt(course.validityDays) : null;
+                    let expiryDate = null;
+
+                    if (validityDays && validityDays > 0) {
+                        const purchaseDate = new Date();
+                        expiryDate = new Date(purchaseDate.setDate(purchaseDate.getDate() + validityDays));
+                    } else {
+                        const purchaseDate = new Date();
+                        expiryDate = new Date(purchaseDate.setFullYear(purchaseDate.getFullYear() + 100));
+                    }
+
+                    const newEnrolledCourse = {
+                        courseId: course.id,
+                        expiryDate: expiryDate,
+                        purchaseDate: serverTimestamp(),
+                        paymentId: response.razorpay_payment_id // Good practice to save payment ID
+                    };
+
+                    const userDocRef = doc(db, 'users', currentUser.uid);
+                    await setDoc(userDocRef, {
+                        enrolledCourses: arrayUnion(newEnrolledCourse)
+                    }, { merge: true });
+
+                    // Navigate to a success page
+                    navigate(`/purchase-success/${course.id}`);
+
+                } catch (err) {
+                    console.error("Error saving enrollment after payment:", err);
+                    // Optionally navigate to an error page
+                    alert("Payment was successful, but we had an issue enrolling you. Please contact support.");
+                }
             },
             prefill: {
                 name: currentUser.displayName || 'New User',
                 email: currentUser.email,
-                contact: '9999999999' // Optional
             },
             notes: {
                 course_id: course.id,
@@ -71,6 +109,10 @@ export default function Payment() {
         paymentObject.open();
     };
 
+    if (loading) {
+        return <div className="text-center pt-32">Loading payment details...</div>;
+    }
+    
     if (!course) {
         return <div className="text-center pt-32">Course not found.</div>;
     }

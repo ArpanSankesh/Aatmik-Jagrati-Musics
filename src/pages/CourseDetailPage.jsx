@@ -14,7 +14,7 @@ export default function CourseDetailPage() {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
-    const [course, setCourse] = useState(null); 
+    const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [hasAccess, setHasAccess] = useState(false);
     const [currentTopic, setCurrentTopic] = useState(null);
@@ -42,15 +42,35 @@ export default function CourseDetailPage() {
 
                     if (userDocSnap.exists()) {
                         const userData = userDocSnap.data();
-                        const purchasedCourseIds = userData.purchasedCourses || [];
-                        if (purchasedCourseIds.includes(courseId)) {
-                            setHasAccess(true);
-                            setCurrentTopic(getFirstTopic(fetchedCourse));
-                            if (fetchedCourse.levels && fetchedCourse.levels.length > 0) {
-                                setOpenLevels({ [fetchedCourse.levels[0].id]: true });
+                        
+                        // --- COMPLETELY NEW & ROBUST ACCESS LOGIC ---
+                        const enrolledCourses = userData.enrolledCourses || [];
+                        
+                        // 1. Find ALL enrollments for this specific course
+                        const allEnrollmentsForCourse = enrolledCourses.filter(
+                            (c) => c.courseId === courseId
+                        );
+
+                        if (allEnrollmentsForCourse.length > 0) {
+                            // 2. Sort them to find the one with the latest expiry date
+                            allEnrollmentsForCourse.sort((a, b) => b.expiryDate.toDate() - a.expiryDate.toDate());
+                            
+                            // 3. The most recent enrollment is the first in the sorted array
+                            const latestEnrollment = allEnrollmentsForCourse[0];
+
+                            // 4. Check if THIS latest enrollment is still valid
+                            if (latestEnrollment && latestEnrollment.expiryDate.toDate() > new Date()) {
+                                setHasAccess(true);
+                                const firstTopic = getFirstTopic(fetchedCourse);
+                                setCurrentTopic(firstTopic);
+                                if (fetchedCourse.levels && fetchedCourse.levels.length > 0) {
+                                    setOpenLevels({ [fetchedCourse.levels[0].id]: true });
+                                }
+                            } else {
+                                setHasAccess(false); // Access expired
                             }
                         } else {
-                            setHasAccess(false);
+                            setHasAccess(false); // Not enrolled at all
                         }
                     } else {
                         setHasAccess(false);
@@ -82,14 +102,14 @@ export default function CourseDetailPage() {
     if (!course) {
         return <div className="flex items-center justify-center h-screen"><div>Course not found.</div></div>;
     }
- 
+
     if (!hasAccess) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
                 <div className="max-w-md w-full text-center bg-white p-10 rounded-xl shadow-lg">
                     <ShieldExclamationIcon className="mx-auto h-16 w-16 text-red-500" />
                     <h1 className="mt-6 text-3xl font-extrabold text-gray-900">Access Denied</h1>
-                    <p className="mt-4 text-gray-600">You have not enrolled in this course yet.</p>
+                    <p className="mt-4 text-gray-600">Your access to this course has expired or you are not enrolled.</p>
                     <div className="mt-8">
                         <Link
                             to={`/checkout/${course.id}`}
@@ -167,13 +187,13 @@ export default function CourseDetailPage() {
                                     <video
                                         key={currentTopic.id}
                                         className="absolute top-0 left-0 w-full h-full"
+                                        src={currentTopic.videoUrl}
                                         controls
                                         controlsList="nodownload noremoteplayback"
                                         disablePictureInPicture
                                         onContextMenu={(e) => e.preventDefault()}
                                         style={{ objectFit: 'contain' }}
                                     >
-                                        <source src={currentTopic.videoUrl} type="video/mp4" />
                                         Your browser does not support the video tag.
                                     </video>
                                 </div>
@@ -187,13 +207,38 @@ export default function CourseDetailPage() {
                                     </nav>
                                 </div>
                                 <div className="pt-6">
-                                    {activeTab === 'notes' && (<div className="prose max-w-none text-slate-600"><p>{currentTopic.notes}</p></div>)}
-                                    {activeTab === 'video' && (<div className="text-slate-600"><p>The lesson video is playing above.</p></div>)}
+                                    {activeTab === 'video' && (
+                                        <div className="text-slate-600">
+                                            <p>The lesson video is playing above. Select a lesson from the sidebar to begin.</p>
+                                        </div>
+                                    )}
+                                    {activeTab === 'notes' && (
+                                        <div className="prose max-w-none text-slate-600">
+                                            {currentTopic.notesImageUrl && (
+                                                <img
+                                                    src={currentTopic.notesImageUrl}
+                                                    alt={`Notes for ${currentTopic.title}`}
+                                                    className="max-w-full h-auto rounded-lg mb-4 shadow-md"
+                                                />
+                                            )}
+
+                                            {currentTopic.notes ? (
+                                                <p>{currentTopic.notes}</p>
+                                            ) : null}
+
+                                            {!currentTopic.notesImageUrl && !currentTopic.notes && (
+                                                <p>No notes available for this lesson.</p>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </>
                     ) : (
-                        <div className="text-center p-10 bg-white rounded-lg shadow-md"><h2 className="text-2xl font-semibold text-gray-700">No topics available in this course yet.</h2><p className="text-gray-500 mt-2">Please check back later!</p></div>
+                        <div className="text-center p-10 bg-white rounded-lg shadow-md">
+                            <h2 className="text-2xl font-semibold text-gray-700">No topics available in this course yet.</h2>
+                            <p className="text-gray-500 mt-2">Please check back later!</p>
+                        </div>
                     )}
                 </main>
             </div>
