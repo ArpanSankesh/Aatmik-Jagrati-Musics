@@ -20,7 +20,7 @@ export default function FeaturesSection() {
         {
             title: "🔒 Secure Learning",
             desc: "Encrypted streaming with anti-piracy protection to keep your lessons safe.",
-            img: "/assets/hero.jpg",
+            img: "/assets/Hero.jpg",
         },
         {
             title: "💬 Doubt Support",

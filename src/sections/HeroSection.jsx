@@ -38,7 +38,7 @@ export default function HeroSection() {
             
             <div
                 className="w-[90%] h-[300px] md:h-[600px] rounded-t-3xl mt-16 bg-cover bg-center object-cover"
-                style={{ backgroundImage: "url('/assets/hero.jpg')" }}
+                style={{ backgroundImage: "url('/assets/Hero.jpg')" }}
             >
             </div>
 
