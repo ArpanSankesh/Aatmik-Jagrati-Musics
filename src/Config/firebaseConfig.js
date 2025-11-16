@@ -9,7 +9,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyD9kvNqsFEVXb_rYVhdBqox_A7LD56nr4I",
     authDomain: "aatmikjagratimusics.firebaseapp.com",
     projectId: "aatmikjagratimusics",
-    storageBucket: "aatmikjagratimusics.appspot.com",
+    storageBucket: "aatmikjagratimusics.firebasestorage.app",
     messagingSenderId: "219264603558",
     appId: "1:219264603558:web:c282eb09d81ad94043ab67",
     measurementId: "G-QWK91ZGZYE"

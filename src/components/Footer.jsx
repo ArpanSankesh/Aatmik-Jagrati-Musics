@@ -74,11 +74,11 @@ export default function Footer() {
                         <div className="space-y-3 text-sm">
                             <a href="tel:+919691148602" className="flex items-start gap-2 hover:text-indigo-600 transition group">
                                 <Phone size={16} className="mt-0.5 flex-shrink-0" />
-                                <span className="break-words">+91 96911 48602</span>
+                                <span className="break-words">+91 8982836220</span>
                             </a>
-                            <a href="mailto:Aatmikjagratimusics714@gmail.com" className="flex items-start gap-2 hover:text-indigo-600 transition group">
+                            <a href="mailto:ajmusicscontact714@gmail.com" className="flex items-start gap-2 hover:text-indigo-600 transition group">
                                 <Mail size={16} className="mt-0.5 flex-shrink-0" />
-                                <span className="break-words">Aatmikjagratimusics714@gmail.com</span>
+                                <span className="break-words">ajmusicscontact714@gmail.com</span>
                             </a>
                         </div>
                     </div>

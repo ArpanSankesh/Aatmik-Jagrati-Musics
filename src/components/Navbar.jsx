@@ -35,8 +35,8 @@ export default function Navbar() {
     const handleLogout = async () => {
         try {
             await logout();
-            setOpenProfileMenu(false); // Close dropdown
-            navigate('/'); // Redirect to home after logout
+            setOpenProfileMenu(false);
+            navigate('/');
         } catch (error) {
             console.error("Failed to log out", error);
         }
@@ -59,10 +59,8 @@ export default function Navbar() {
             <div className="hidden items-center md:gap-8 lg:gap-9 font-medium md:flex">
                 <NavLink to="/" className="hover:text-indigo-600 transition-colors">Home</NavLink>
                 <NavLink to="/courses" className="hover:text-indigo-600 transition-colors">Courses</NavLink>
-                {/* --- 1. ADDED LIVE CLASSES LINK HERE --- */}
                 <NavLink to="/live-classes" className="hover:text-indigo-600 transition-colors">Live Classes</NavLink>
                 {currentUser && (
-                    /* --- 2. UPDATED "My Courses" to "My Classroom" --- */
                     <NavLink to="/my-classroom" className="hover:text-indigo-600 transition-colors">My Classroom</NavLink>
                 )}
             </div>
@@ -71,10 +69,8 @@ export default function Navbar() {
             <div className={`fixed inset-0 flex flex-col items-center justify-center gap-6 text-lg font-medium bg-white/80 backdrop-blur-md md:hidden transition duration-300 ${openMobileMenu ? "translate-x-0" : "-translate-x-full"}`}>
                 <NavLink to="/" onClick={() => setOpenMobileMenu(false)}>Home</NavLink>
                 <NavLink to="/courses" onClick={() => setOpenMobileMenu(false)}>Courses</NavLink>
-                 {/* --- 3. ADDED LIVE CLASSES LINK FOR MOBILE --- */}
                 <NavLink to="/live-classes" onClick={() => setOpenMobileMenu(false)}>Live Classes</NavLink>
                 {currentUser && (
-                    /* --- 4. UPDATED FOR MOBILE --- */
                     <NavLink to="/my-classroom" onClick={() => setOpenMobileMenu(false)}>My Classroom</NavLink>
                 )}
                 
@@ -82,6 +78,22 @@ export default function Navbar() {
 
                 {currentUser ? (
                     <>
+                        {/* Mobile Profile Picture */}
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border-2 border-indigo-600">
+                                {currentUser.photoURL ? (
+                                    <img 
+                                        src={currentUser.photoURL} 
+                                        alt="Profile" 
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <UserCircle size={40} className="text-gray-400" />
+                                )}
+                            </div>
+                            <p className="font-medium text-gray-800">{currentUser.displayName || currentUser.email}</p>
+                        </div>
+                        
                         <Link to="/profile" onClick={() => setOpenMobileMenu(false)} className="text-gray-800 hover:text-indigo-600">My Profile</Link>
                         <button 
                             onClick={() => { handleLogout(); setOpenMobileMenu(false); }} 
@@ -111,18 +123,45 @@ export default function Navbar() {
                 {currentUser ? (
                     // Profile Dropdown for logged-in users
                     <div className="relative" ref={profileMenuRef}>
-                        <button onClick={() => setOpenProfileMenu(!openProfileMenu)} className="hidden md:block">
-                            <UserCircle size={28} className="text-gray-600 hover:text-indigo-600" />
+                        <button 
+                            onClick={() => setOpenProfileMenu(!openProfileMenu)} 
+                            className="hidden md:flex items-center gap-2 hover:opacity-80 transition"
+                        >
+                            {/* Profile Picture in Navbar */}
+                            <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border-2 border-indigo-600">
+                                {currentUser.photoURL ? (
+                                    <img 
+                                        src={currentUser.photoURL} 
+                                        alt="Profile" 
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <UserCircle size={24} className="text-gray-400" />
+                                )}
+                            </div>
                         </button>
                         
                         {openProfileMenu && (
                             <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200">
-                                <div className="px-4 py-3 border-b border-gray-100">
-                                    <p className="text-sm text-gray-500">Signed in as</p>
-                                    <p className="font-medium text-gray-800 truncate">{currentUser.displayName || currentUser.email}</p>
+                                <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
+                                    {/* Profile Picture in Dropdown */}
+                                    <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center flex-shrink-0">
+                                        {currentUser.photoURL ? (
+                                            <img 
+                                                src={currentUser.photoURL} 
+                                                alt="Profile" 
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <UserCircle size={28} className="text-gray-400" />
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-gray-500">Signed in as</p>
+                                        <p className="font-medium text-gray-800 truncate">{currentUser.displayName || currentUser.email}</p>
+                                    </div>
                                 </div>
                                 <div className="py-1">
-                                     {/* --- 5. UPDATED IN DROPDOWN MENU --- */}
                                     <Link 
                                         to="/my-classroom" 
                                         onClick={() => setOpenProfileMenu(false)}

@@ -33,7 +33,7 @@ export default function BottomBanner() {
 
                     {/* Facebook */}
                     <a 
-                        href="YOUR_FACEBOOK_URL_HERE" 
+                        href=" https://www.facebook.com/people/Aatmik-jagrati-musics/61573999355501/" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 rounded-md py-3 px-5 bg-blue-600 hover:bg-blue-700 transition text-white shadow-md hover:shadow-lg"

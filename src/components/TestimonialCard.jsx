@@ -6,15 +6,18 @@ export default function TestimonialCard({ testimonial }) {
                 <img 
                     src={testimonial.image} 
                     alt={testimonial.name} 
-                    className="w-full h-52 object-cover transform hover:scale-105 transition-transform duration-300" 
+                    className="w-full h-52 object-contain transform hover:scale-105 transition-transform duration-300" 
                 />
             </div>
 
             {/* Content section */}
             <div className="p-6">
                 {/* Teacher name */}
-                <h3 className="text-lg font-bold text-center text-gray-900 mb-2">
+                <h3 className="text-lg font-bold text-center text-gray-900 ">
                     {testimonial.name}
+                </h3>
+                <h3 className="text-lg text-center text-gray-500 mb-2">
+                    {testimonial.handle}
                 </h3>
                 
                 

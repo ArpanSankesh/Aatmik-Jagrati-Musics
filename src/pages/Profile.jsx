@@ -1,18 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { updateProfile, sendPasswordResetEmail } from 'firebase/auth';
-import { User, Mail, Edit3, Key, Shield } from 'lucide-react';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { storage } from '../Config/firebaseConfig'; // Make sure you have storage exported from your firebase config
+import { User, Mail, Edit3, Key, Shield, Camera, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Profile() {
     const { currentUser, userRole } = useAuth();
     const [displayName, setDisplayName] = useState(currentUser.displayName || '');
     const [loading, setLoading] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [photoURL, setPhotoURL] = useState(currentUser.photoURL || '');
+    const fileInputRef = useRef(null);
 
     // Check if user is admin based on Firestore role
     const isAdmin = userRole === 'admin';
+
+    // Check if user signed in with Google
+    const isGoogleUser = currentUser.providerData.some(
+        provider => provider.providerId === 'google.com'
+    );
 
     const handleProfileUpdate = async () => {
         if (currentUser.displayName === displayName) return;
@@ -40,6 +50,69 @@ export default function Profile() {
             setError('Failed to send password reset email.');
             console.error(err);
         }
+    };
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setError('Please upload an image file.');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setError('Image size should be less than 5MB.');
+            return;
+        }
+
+        setUploadingImage(true);
+        setError('');
+        setMessage('');
+
+        try {
+            // Create a reference to the storage location
+            const imageRef = ref(storage, `profile-pictures/${currentUser.uid}/${file.name}`);
+            
+            // Upload the file
+            await uploadBytes(imageRef, file);
+            
+            // Get the download URL
+            const downloadURL = await getDownloadURL(imageRef);
+            
+            // Update user profile with new photo URL
+            await updateProfile(currentUser, { photoURL: downloadURL });
+            
+            setPhotoURL(downloadURL);
+            setMessage('Profile picture updated successfully!');
+        } catch (err) {
+            setError('Failed to upload image. Please try again.');
+            console.error(err);
+        }
+        
+        setUploadingImage(false);
+    };
+
+    const handleRemoveImage = async () => {
+        if (!photoURL || isGoogleUser) return;
+
+        setUploadingImage(true);
+        setError('');
+        setMessage('');
+
+        try {
+            // Update profile to remove photo URL
+            await updateProfile(currentUser, { photoURL: null });
+            setPhotoURL('');
+            setMessage('Profile picture removed successfully!');
+        } catch (err) {
+            setError('Failed to remove profile picture.');
+            console.error(err);
+        }
+
+        setUploadingImage(false);
     };
 
     return (
@@ -81,6 +154,76 @@ export default function Profile() {
                         </div>
                     </div>
                 )}
+
+                {/* Profile Picture Section */}
+                <div className="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Profile Picture</h2>
+                    <div className="flex flex-col items-center space-y-4">
+                        {/* Profile Picture Display */}
+                        <div className="relative">
+                            <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                                {photoURL ? (
+                                    <img 
+                                        src={photoURL} 
+                                        alt="Profile" 
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <User className="w-16 h-16 text-gray-400" />
+                                )}
+                            </div>
+                            
+                            {/* Edit/Upload Button for non-Google users */}
+                            {!isGoogleUser && (
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={uploadingImage}
+                                    className="absolute bottom-0 right-0 w-10 h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center shadow-lg transition disabled:opacity-50"
+                                >
+                                    <Camera className="w-5 h-5" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Hidden File Input */}
+                        {!isGoogleUser && (
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="hidden"
+                            />
+                        )}
+
+                        {/* Info Text */}
+                        {isGoogleUser ? (
+                            <p className="text-sm text-gray-600 text-center">
+                                Your profile picture is synced with your Google account
+                            </p>
+                        ) : (
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={uploadingImage}
+                                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition disabled:opacity-50 text-sm font-medium"
+                                >
+                                    {uploadingImage ? 'Uploading...' : photoURL ? 'Change Picture' : 'Upload Picture'}
+                                </button>
+                                {photoURL && (
+                                    <button
+                                        onClick={handleRemoveImage}
+                                        disabled={uploadingImage}
+                                        className="px-4 py-2 border border-red-300 text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50 text-sm font-medium flex items-center gap-2"
+                                    >
+                                        <X className="w-4 h-4" />
+                                        Remove Picture
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
 
                 <div className="bg-white rounded-lg shadow p-6 mb-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h2>
