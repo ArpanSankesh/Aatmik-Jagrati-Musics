@@ -5,6 +5,33 @@ import { db } from '../Config/firebaseConfig';
 import { useAuth } from '../context/AuthContext';
 import { CheckCircleIcon, ClockIcon, ArrowLeftIcon, VideoCameraIcon } from '@heroicons/react/24/solid';
 
+// --- HELPER FUNCTION: Converts URLs to clickable links ---
+const renderTextWithLinks = (text) => {
+  if (!text) return null;
+
+  // Regex to find URLs starting with http:// or https://
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+  return text.split(urlRegex).map((part, index) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          // Styling for dark background: White text with underline
+          className="underline text-white hover:text-indigo-200 break-all"
+        >
+          {part}
+        </a>
+      );
+    }
+    // Return plain text
+    return part;
+  });
+};
+
 export default function LiveClassInfoPage() {
   const { courseId } = useParams();
   const { currentUser } = useAuth();
@@ -57,7 +84,13 @@ export default function LiveClassInfoPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2">
               <h1 className="text-4xl lg:text-5xl font-extrabold">{course.title}</h1>
-              <p className="text-lg lg:text-xl text-indigo-100 mt-4">{course.description}</p>
+              
+              {/* --- FIX APPLIED HERE --- */}
+              {/* Changed to div, added whitespace-pre-wrap, and used helper function */}
+              <div className="text-lg lg:text-xl text-indigo-100 mt-4 whitespace-pre-wrap">
+                {renderTextWithLinks(course.description)}
+              </div>
+
               <div className="mt-6 flex items-center">
                 <span className="text-indigo-100">Hosted by</span>
                 <span className="ml-2 font-semibold">{course.instructor}</span>
