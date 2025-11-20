@@ -5,6 +5,7 @@ import { db } from '../Config/firebaseConfig';
 import { useAuth } from '../context/AuthContext';
 import { CheckCircleIcon, ClockIcon, ArrowLeftIcon, VideoCameraIcon } from '@heroicons/react/24/solid';
 
+
 // --- HELPER FUNCTION: Converts URLs to clickable links ---
 const renderTextWithLinks = (text) => {
   if (!text) return null;
@@ -20,17 +21,16 @@ const renderTextWithLinks = (text) => {
           href={part}
           target="_blank"
           rel="noopener noreferrer"
-          // Styling for dark background: White text with underline
           className="underline text-white hover:text-indigo-200 break-all"
         >
           {part}
         </a>
       );
     }
-    // Return plain text
     return part;
   });
 };
+
 
 export default function LiveClassInfoPage() {
   const { courseId } = useParams();
@@ -85,8 +85,6 @@ export default function LiveClassInfoPage() {
             <div className="lg:col-span-2">
               <h1 className="text-4xl lg:text-5xl font-extrabold">{course.title}</h1>
               
-              {/* --- FIX APPLIED HERE --- */}
-              {/* Changed to div, added whitespace-pre-wrap, and used helper function */}
               <div className="text-lg lg:text-xl text-indigo-100 mt-4 whitespace-pre-wrap">
                 {renderTextWithLinks(course.description)}
               </div>
@@ -103,7 +101,7 @@ export default function LiveClassInfoPage() {
               <span className="text-4xl font-extrabold text-gray-900">{course.price}</span>
               <Link 
                 to={currentUser ? `/checkout/live/${course.id}` : '/login'}
-                className="w-full block text-center bg-red-500 text-white font-bold py-4 rounded-xl hover:bg-red-600 transition text-lg mt-6"
+                className="w-full block text-center bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-700 transition text-lg mt-6"
               >
                 Enroll Now
               </Link>

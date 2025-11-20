@@ -1,45 +1,52 @@
 import { Route, Routes, useLocation } from "react-router-dom";
-import Home from "./pages/Home";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import Courses from "./pages/Courses";
-import Login from "./pages/Login";
-import CourseDetailPage from "./pages/CourseDetailPage"; 
-import Profile from "./pages/Profile";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Checkout from "./pages/Checkout"; // We will use one unified checkout
-import PurchaseSuccess from "./pages/PurchaseSuccess";
-import MyClassroom from "./pages/MyClassroom"; // Renamed for clarity
-import AdminRoute from "./components/AdminRoute";
-import AdminLayout from "./components/AdminLayout";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminCourses from "./pages/AdminCourses";
-import CourseEditor from "./pages/CourseEditor";
-import CourseInfoPage from "./pages/CourseInfoPage";
 
-// --- NEW LIVE COURSE IMPORTS ---
-import LiveClasses from "./pages/LiveClasses";
-import LiveClassInfoPage from "./pages/LiveClassInfoPage";
-import AdminLiveCourses from "./pages/AdminLiveCourses";
-import LiveCourseEditor from "./pages/LiveCourseEditor";
-import EnrolledLiveCoursePage from "./pages/EnrolledLiveCoursePage"; // Assuming you have this page
+// --- COMPONENT IMPORTS ---
+import Navbar from "./components/Navbar.jsx";
+import Footer from "./components/Footer.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AdminRoute from "./components/AdminRoute.jsx";
+import AdminLayout from "./components/AdminLayout.jsx";
+
+// --- PAGE IMPORTS ---
+import Home from "./pages/Home.jsx";
+import Courses from "./pages/Courses.jsx";
+import Login from "./pages/Login.jsx";
+import CourseDetailPage from "./pages/CourseDetailPage.jsx"; 
+import Profile from "./pages/Profile.jsx";
+import MyClassroom from "./pages/MyClassroom.jsx"; 
+import AdminDashboard from "./pages/AdminDashboard.jsx";
+import AdminCourses from "./pages/AdminCourses.jsx";
+import CourseEditor from "./pages/CourseEditor.jsx";
+import CourseInfoPage from "./pages/CourseInfoPage.jsx";
+import CheckoutPage from "./pages/CheckoutPage.jsx"; // <--- IMPORTED
+
+// --- LIVE COURSE IMPORTS ---
+import LiveClasses from "./pages/LiveClasses.jsx";
+import LiveClassInfoPage from "./pages/LiveClassInfoPage.jsx";
+import AdminLiveCourses from "./pages/AdminLiveCourses.jsx";
+import LiveCourseEditor from "./pages/LiveCourseEditor.jsx";
+import EnrolledLiveCoursePage from "./pages/EnrolledLiveCoursePage.jsx"; 
 
 export default function App() {
   const pathname = useLocation().pathname;
   
-  // Adjusted logic to hide layout on new pages as well
+  // Hide Navbar/Footer on login page and admin dashboard
   const showLayout = ![
     "/login",
   ].includes(pathname) && !pathname.startsWith('/admin');
 
   return (
     <>
+      {/* Only render Navbar if showLayout is true */}
       {showLayout && <Navbar />}
+      
       <Routes>
         {/* --- Public Routes --- */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/courses" element={<Courses />} />
+        
+        {/* Public Info Pages */}
         <Route path="/course/:courseId" element={<CourseInfoPage />} />
         <Route path="/live-classes" element={<LiveClasses />} />
         <Route path="/live-course/:courseId" element={<LiveClassInfoPage />} />
@@ -47,25 +54,32 @@ export default function App() {
         {/* --- Protected Routes --- */}
         <Route path="/my-classroom" element={<ProtectedRoute><MyClassroom /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        
+        {/* FIXED CHECKOUT ROUTE: Matches "/checkout/course/ID" */}
+        <Route path="/checkout/course/:courseId" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+        <Route path="/checkout/live/:courseId" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+        
+        {/* Content Pages (After Enrollment) */}
         <Route path="/courses/:courseId" element={<ProtectedRoute><CourseDetailPage /></ProtectedRoute>} />
         <Route path="/enrolled/live-course/:courseId" element={<ProtectedRoute><EnrolledLiveCoursePage /></ProtectedRoute>} />
-        <Route path="/purchase-success/:courseId" element={<ProtectedRoute><PurchaseSuccess /></ProtectedRoute>} />
-
-        {/* --- UNIFIED CHECKOUT ROUTE --- */}
-        <Route path="/checkout/:courseType/:courseId" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+        
         
         {/* --- ADMIN ROUTES --- */}
         <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
           <Route index element={<AdminDashboard />} />
+          
+          {/* Standard Courses Admin */}
           <Route path="courses" element={<AdminCourses />} />
           <Route path="create-course" element={<CourseEditor />} />
           <Route path="course/:courseId" element={<CourseEditor />} />
-          {/* --- ADMIN LIVE COURSE ROUTES --- */}
+          
+          {/* Live Courses Admin */}
           <Route path="live-courses" element={<AdminLiveCourses />} />
           <Route path="create-live-course" element={<LiveCourseEditor />} />
           <Route path="live-course/:courseId" element={<LiveCourseEditor />} />
         </Route>
       </Routes>
+      
       {showLayout && <Footer />}
     </>
   );

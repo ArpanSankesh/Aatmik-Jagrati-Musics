@@ -29,7 +29,7 @@ export default function Courses() {
     }
 
     return (
-        <div className="pt-32 pb-16 px-6 md:px-16 lg:px-24 xl:px-32 bg-gray-50 min-h-screen">
+        <div className="pt-10 pb-16 px-6 md:px-16 lg:px-24 xl:px-32 bg-gray-50 min-h-screen">
             <header className="text-center mb-16">
                 <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">
                     Explore Our Courses

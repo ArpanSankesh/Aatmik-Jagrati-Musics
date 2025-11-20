@@ -91,7 +91,6 @@ export default function CourseInfoPage() {
 
   const stats = getTotalStats();
   
-  // --- NEW: Helper array for course features ---
   const courseFeatures = [
       { 
           icon: ClockIcon, 
@@ -99,7 +98,6 @@ export default function CourseInfoPage() {
               ? `${course.courseDuration} of content` 
               : `${Math.floor(stats.totalDuration / 60)}+ hours on-demand video` 
       },
-      // --- NEW: Display validity period if available ---
       ...(course.validityDays ? [{
           icon: CheckCircleIcon,
           text: `${course.validityDays}-day access`
@@ -138,6 +136,7 @@ export default function CourseInfoPage() {
               </div>
             </div>
 
+            {/* Mobile Card */}
             <div className="lg:hidden">
               <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6">
                 <img 
@@ -153,8 +152,9 @@ export default function CourseInfoPage() {
                     )}
                   </div>
                 </div>
+                {/* --- FIX: Added '/course/' to the link --- */}
                 <Link 
-                  to={currentUser ? `/checkout/${course.id}` : '/login'} 
+                  to={currentUser ? `/checkout/course/${course.id}` : '/login'} 
                   className="w-full block text-center bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 sm:py-4 rounded-lg sm:rounded-xl hover:shadow-lg hover:scale-[1.02] transition text-base sm:text-lg mb-4 sm:mb-6"
                 >
                   Enroll Now
@@ -163,7 +163,7 @@ export default function CourseInfoPage() {
                 <div className="border-t border-gray-200 pt-4 sm:pt-6">
                   <p className="font-semibold text-gray-800 text-sm mb-3">This course includes:</p>
                   <div className="space-y-2">
-                    {courseFeatures.map((item, idx) => ( // <-- Use the new features array
+                    {courseFeatures.map((item, idx) => (
                       <div key={idx} className="flex items-center text-xs sm:text-sm text-gray-700">
                         <item.icon className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
                         <span>{item.text}</span>
@@ -272,6 +272,7 @@ export default function CourseInfoPage() {
             </div>
           </div>
 
+          {/* Desktop Sidebar Card */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-24">
               <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
@@ -293,9 +294,10 @@ export default function CourseInfoPage() {
                       )}
                     </div>
                   </div>
-
+                  
+                  {/* --- FIX: Added '/course/' to the link --- */}
                   <Link 
-                    to={currentUser ? `/checkout/${course.id}` : '/login'} 
+                    to={currentUser ? `/checkout/course/${course.id}` : '/login'} 
                     className="w-full block text-center bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-4 rounded-xl hover:shadow-lg hover:scale-[1.02] transition text-lg mb-6"
                   >
                     {currentUser ? 'Enroll Now' : 'Sign In to Enroll'}
@@ -303,7 +305,7 @@ export default function CourseInfoPage() {
 
                   <div className="space-y-3 border-t border-gray-100 pt-6">
                     <p className="font-semibold text-gray-800 text-sm">This course includes:</p>
-                    {courseFeatures.map((item, idx) => ( // <-- Use the new features array
+                    {courseFeatures.map((item, idx) => (
                       <div key={idx} className="flex items-center text-sm text-gray-700">
                         <item.icon className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
                         <span>{item.text}</span>

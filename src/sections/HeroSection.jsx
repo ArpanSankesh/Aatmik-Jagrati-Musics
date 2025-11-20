@@ -7,11 +7,11 @@ export default function HeroSection() {
         <div className="relative flex flex-col items-center justify-center text-center bg-[url('/assets/hero-section-dot-image.png')] bg-cover bg-no-repeat">
 
             {/* Limited Time Offer Badge - Hidden on Mobile, Visible on Desktop */}
-            <div className="hidden md:block absolute top-30 right-8 bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-2 rounded-lg shadow-lg font-semibold z-10">
+            <div className="hidden md:block absolute top-10 right-8 bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-2 rounded-lg shadow-lg font-semibold z-10">
                 Check <span className="font-bold">limited time offers are available on all courses</span>
             </div>
 
-            <h1 className="mt-28 md:mt-44 text-[40px]/12 md:text-[54px]/16 font-semibold max-w-3xl">
+            <h1 className="mt-10 md:mt-28 text-[40px]/12 md:text-[54px]/16 font-semibold max-w-3xl">
                 Your Personal
                 {" "}
                 <span className="bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">

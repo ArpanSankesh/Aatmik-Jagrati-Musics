@@ -149,7 +149,7 @@ export default function MyClassroom() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-32 pb-16 px-6 md:px-16">
+        <div className="min-h-screen bg-gray-50 pt-10 pb-16 px-6 md:px-16">
             <header className="text-center mb-16">
                 <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">My Classroom</h1>
                 <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">All your enrolled courses and live sessions in one place.</p>
