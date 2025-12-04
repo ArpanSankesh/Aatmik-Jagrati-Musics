@@ -20,7 +20,7 @@ export const testimonialsData = [
         feedback: 'Vocal coach and music theory expert. Dedicated to helping students develop strong fundamentals and confidence in their abilities.'
     },
     {
-        image: '/assets/aman.jpeg',
+        image: '/assets/amann.jpeg',
         name: 'Aman Chouhan',
         handle: 'Team member',
         feedback: 'Percussion and rhythm specialist. Brings energy and creativity to every lesson, making learning fun and engaging.'

@@ -6,7 +6,7 @@ export default function TestimonialCard({ testimonial }) {
                 <img 
                     src={testimonial.image} 
                     alt={testimonial.name} 
-                    className="w-full h-52 object-contain transform hover:scale-105 transition-transform duration-300 object-cover" 
+                    className="w-full h-52 transform hover:scale-105 transition-transform duration-300 object-cover" 
                 />
             </div>
 
