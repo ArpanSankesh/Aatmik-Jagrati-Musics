@@ -4,22 +4,22 @@ export default function FeaturesSection() {
     const features = [
         {
             title: "🎥 HD Video Lessons",
-            desc: "Step-by-step piano tutorials designed for beginners and intermediate learners.",
+            desc: "",
             img: "/assets/online-class.jpg",
         },
         {
             title: "🎓 Course Certificates",
-            desc: "Earn certificates of completion to showcase your piano learning achievements.",
+            desc: "",
             img: "/assets/certificate.jpg",
         },
         {
             title: "📑 Downloadable Notes",
-            desc: "Access sheet music and practice exercises anytime to reinforce your learning.",
+            desc: "",
             img: "/assets/notes.jpg",
         },
         {
             title: "💬 Doubt Support",
-            desc: "Get your questions answered quickly through our doubt support system.",
+            desc: "",
             img: "/assets/doubt.png",
         },
     ];
