@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -12,6 +13,7 @@ import {
     ClockIcon,
     PlayCircleIcon
 } from '@heroicons/react/24/solid';
+
 
 
 export default function CheckoutPage() {
@@ -87,7 +89,7 @@ export default function CheckoutPage() {
 
 
         const options = {
-            key: "rzp_test_RQn3ikNYEBVn8s", 
+            key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
             amount: cleanPrice * 100,
             currency: "INR",
             name: "Your Platform Name",

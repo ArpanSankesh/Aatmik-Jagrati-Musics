@@ -12,7 +12,7 @@ export default function BottomBanner() {
                 <div className="flex flex-wrap items-center justify-center gap-4">
                     {/* Instagram */}
                     <a 
-                        href="https://www.instagram.com/aatmik_jagrati_music/" 
+                        href="https://www.instagram.com/aatmik_jagrati_musics/" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 rounded-md py-3 px-5 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 transition text-white shadow-md hover:shadow-lg"

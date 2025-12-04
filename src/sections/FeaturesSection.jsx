@@ -4,22 +4,22 @@ export default function FeaturesSection() {
     const features = [
         {
             title: "🎥 HD Video Lessons",
-            desc: "",
+            desc: "Crystal-clear, multi-angle video tutorials that break down every concept step by step, perfect for both beginners and intermediate learners.",
             img: "/assets/online-class.jpg",
         },
         {
             title: "🎓 Course Certificates",
-            desc: "",
+            desc: "Earn a shareable certificate after completing the course to showcase your skills on resumes, portfolios, and social profiles.",
             img: "/assets/certificate.jpg",
         },
         {
             title: "📑 Downloadable Notes",
-            desc: "",
+            desc: "Download neatly structured notes, sheet music, and practice material so you can revise anytime without needing to be online.",
             img: "/assets/notes.jpg",
         },
         {
             title: "💬 Doubt Support",
-            desc: "",
+            desc: "Get your questions resolved quickly through dedicated doubt support so you never stay stuck on any topic for long.",
             img: "/assets/doubt.png",
         },
     ];

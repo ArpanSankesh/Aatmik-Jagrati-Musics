@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Mail, Phone, Instagram, Youtube, Facebook } from "lucide-react";
+import { Mail, Phone, Instagram, Youtube, Facebook, MessageCircle } from "lucide-react";
+
 
 export default function Footer() {
     return (
@@ -10,16 +11,15 @@ export default function Footer() {
                     {/* Brand Section */}
                     <div className="lg:col-span-2">
                         <div className="flex items-center gap-1">
-
-            <Link to="/">
-                <img src="/assets/logo.png" alt="Logo" className="h-10" />
-            </Link>
-            <Link to="/">
-                <h1 className="font-bold text-xl md:text-2xl text-indigo-600 hover:text-indigo-700 transition">
-                    Aatmik Jagrati Musics
-                </h1>
-                        </Link>
-            </div>
+                            <Link to="/">
+                                <img src="/assets/logo.png" alt="Logo" className="h-10" />
+                            </Link>
+                            <Link to="/">
+                                <h1 className="font-bold text-xl md:text-2xl text-indigo-600 hover:text-indigo-700 transition">
+                                    Aatmik Jagrati Musics
+                                </h1>
+                            </Link>
+                        </div>
                         <p className="mt-4 text-sm leading-relaxed">
                             Master your musical instrument with expert-led courses. Learn at your own pace with professional lessons and resources.
                         </p>
@@ -27,7 +27,7 @@ export default function Footer() {
                         {/* Social Links */}
                         <div className="flex gap-4 mt-6">
                             <a 
-                                href="https://www.instagram.com/aatmik_jagrati_music/" 
+                                href="https://www.instagram.com/aatmik_jagrati_musics/" 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gradient-to-r hover:from-purple-500 hover:via-pink-500 hover:to-orange-500 flex items-center justify-center text-gray-600 hover:text-white transition-all duration-300"
@@ -45,7 +45,7 @@ export default function Footer() {
                                 <Youtube size={18} />
                             </a>
                             <a 
-                                href="YOUR_FACEBOOK_URL" 
+                                href="https://www.facebook.com/people/Aatmik-jagrati-musics/61573999355501/" 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="w-10 h-10 rounded-full bg-gray-100 hover:bg-blue-600 flex items-center justify-center text-gray-600 hover:text-white transition-all duration-300"
@@ -53,8 +53,18 @@ export default function Footer() {
                             >
                                 <Facebook size={18} />
                             </a>
+                            <a 
+                                href="https://wa.me/918982836220" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-green-600 flex items-center justify-center text-gray-600 hover:text-white transition-all duration-300"
+                                aria-label="WhatsApp"
+                            >
+                                <MessageCircle size={18} />
+                            </a>
                         </div>
                     </div>
+
 
                     {/* Quick Links */}
                     <div>
@@ -68,11 +78,12 @@ export default function Footer() {
                         </ul>
                     </div>
 
+
                     {/* Contact Info */}
                     <div>
                         <h2 className="font-semibold mb-4 text-gray-800">Contact Us</h2>
                         <div className="space-y-3 text-sm">
-                            <a href="tel:+919691148602" className="flex items-start gap-2 hover:text-indigo-600 transition group">
+                            <a href="tel:+918982836220" className="flex items-start gap-2 hover:text-indigo-600 transition group">
                                 <Phone size={16} className="mt-0.5 flex-shrink-0" />
                                 <span className="break-words">+91 8982836220</span>
                             </a>
@@ -80,9 +91,14 @@ export default function Footer() {
                                 <Mail size={16} className="mt-0.5 flex-shrink-0" />
                                 <span className="break-words">ajmusicscontact714@gmail.com</span>
                             </a>
+                            <a href="https://wa.me/918982836220" target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 hover:text-green-600 transition group">
+                                <MessageCircle size={16} className="mt-0.5 flex-shrink-0" />
+                                <span className="break-words">WhatsApp Chat</span>
+                            </a>
                         </div>
                     </div>
                 </div>
+
 
                 {/* Bottom Bar */}
                 <div className="py-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
