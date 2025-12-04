@@ -10,7 +10,7 @@ export default function BottomBanner() {
                 </p>
                 
                 <div className="flex flex-wrap items-center justify-center gap-4">
-                    {/* Instagram */}
+                    {/* Instagram*/}
                     <a 
                         href="https://www.instagram.com/aatmik_jagrati_musics/" 
                         target="_blank" 
