@@ -2,11 +2,11 @@ export default function TestimonialCard({ testimonial }) {
     return (
         <div className="bg-white rounded-xl overflow-hidden mx-4 shadow-md hover:shadow-xl transition-all duration-300 w-80 shrink-0 border border-gray-100">
             {/* Large image at top */}
-            <div className="relative overflow-hidden">
+            <div className="relative overflow-hidden ">
                 <img 
                     src={testimonial.image} 
                     alt={testimonial.name} 
-                    className="w-full h-52 object-contain transform hover:scale-105 transition-transform duration-300" 
+                    className="w-full h-52 object-contain transform hover:scale-105 transition-transform duration-300 object-cover" 
                 />
             </div>
 
