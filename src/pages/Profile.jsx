@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { updateProfile, sendPasswordResetEmail } from 'firebase/auth';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { storage } from '../Config/firebaseConfig'; // Make sure you have storage exported from your firebase config
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../Config/firebaseConfig';
 import { User, Mail, Edit3, Key, Shield, Camera, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
 
 export default function Profile() {
     const { currentUser, userRole } = useAuth();
@@ -16,16 +17,14 @@ export default function Profile() {
     const [photoURL, setPhotoURL] = useState(currentUser.photoURL || '');
     const fileInputRef = useRef(null);
 
+
     // Check if user is admin based on Firestore role
     const isAdmin = userRole === 'admin';
 
-    // Check if user signed in with Google
-    const isGoogleUser = currentUser.providerData.some(
-        provider => provider.providerId === 'google.com'
-    );
 
     const handleProfileUpdate = async () => {
         if (currentUser.displayName === displayName) return;
+
 
         setLoading(true);
         setError('');
@@ -40,6 +39,7 @@ export default function Profile() {
         setLoading(false);
     };
 
+
     const handlePasswordReset = async () => {
         setError('');
         setMessage('');
@@ -52,9 +52,11 @@ export default function Profile() {
         }
     };
 
+
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
 
         // Validate file type
         if (!file.type.startsWith('image/')) {
@@ -62,15 +64,18 @@ export default function Profile() {
             return;
         }
 
+
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
             setError('Image size should be less than 5MB.');
             return;
         }
 
+
         setUploadingImage(true);
         setError('');
         setMessage('');
+
 
         try {
             // Create a reference to the storage location
@@ -95,16 +100,19 @@ export default function Profile() {
         setUploadingImage(false);
     };
 
+
     const handleRemoveImage = async () => {
-        if (!photoURL || isGoogleUser) return;
+        if (!photoURL) return;
+
 
         setUploadingImage(true);
         setError('');
         setMessage('');
 
+
         try {
-            // Update profile to remove photo URL
-            await updateProfile(currentUser, { photoURL: null });
+            // Update profile to remove photo URL by setting it to empty string
+            await updateProfile(currentUser, { photoURL: '' });
             setPhotoURL('');
             setMessage('Profile picture removed successfully!');
         } catch (err) {
@@ -112,13 +120,16 @@ export default function Profile() {
             console.error(err);
         }
 
+
         setUploadingImage(false);
     };
+
 
     return (
         <div className="min-h-screen bg-gray-50 pt-32 pb-16">
             <div className="max-w-3xl mx-auto px-4">
                 <h1 className="text-3xl font-bold text-gray-900 mb-8">Profile</h1>
+
 
                 {message && (
                     <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
@@ -130,6 +141,7 @@ export default function Profile() {
                         {error}
                     </div>
                 )}
+
 
                 {/* Admin Dashboard Button */}
                 {isAdmin && (
@@ -155,6 +167,7 @@ export default function Profile() {
                     </div>
                 )}
 
+
                 {/* Profile Picture Section */}
                 <div className="bg-white rounded-lg shadow p-6 mb-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Profile Picture</h2>
@@ -173,57 +186,50 @@ export default function Profile() {
                                 )}
                             </div>
                             
-                            {/* Edit/Upload Button for non-Google users */}
-                            {!isGoogleUser && (
+                            {/* Edit/Upload Button */}
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploadingImage}
+                                className="absolute bottom-0 right-0 w-10 h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center shadow-lg transition disabled:opacity-50"
+                            >
+                                <Camera className="w-5 h-5" />
+                            </button>
+                        </div>
+
+
+                        {/* Hidden File Input */}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                        />
+
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploadingImage}
+                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition disabled:opacity-50 text-sm font-medium"
+                            >
+                                {uploadingImage ? 'Uploading...' : photoURL ? 'Change Picture' : 'Upload Picture'}
+                            </button>
+                            {photoURL && (
                                 <button
-                                    onClick={() => fileInputRef.current?.click()}
+                                    onClick={handleRemoveImage}
                                     disabled={uploadingImage}
-                                    className="absolute bottom-0 right-0 w-10 h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center shadow-lg transition disabled:opacity-50"
+                                    className="px-4 py-2 border border-red-300 text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50 text-sm font-medium flex items-center gap-2"
                                 >
-                                    <Camera className="w-5 h-5" />
+                                    <X className="w-4 h-4" />
+                                    Remove Picture
                                 </button>
                             )}
                         </div>
-
-                        {/* Hidden File Input */}
-                        {!isGoogleUser && (
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                                className="hidden"
-                            />
-                        )}
-
-                        {/* Info Text */}
-                        {isGoogleUser ? (
-                            <p className="text-sm text-gray-600 text-center">
-                                Your profile picture is synced with your Google account
-                            </p>
-                        ) : (
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={uploadingImage}
-                                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition disabled:opacity-50 text-sm font-medium"
-                                >
-                                    {uploadingImage ? 'Uploading...' : photoURL ? 'Change Picture' : 'Upload Picture'}
-                                </button>
-                                {photoURL && (
-                                    <button
-                                        onClick={handleRemoveImage}
-                                        disabled={uploadingImage}
-                                        className="px-4 py-2 border border-red-300 text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50 text-sm font-medium flex items-center gap-2"
-                                    >
-                                        <X className="w-4 h-4" />
-                                        Remove Picture
-                                    </button>
-                                )}
-                            </div>
-                        )}
                     </div>
                 </div>
+
 
                 <div className="bg-white rounded-lg shadow p-6 mb-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h2>
@@ -254,6 +260,7 @@ export default function Profile() {
                     </div>
                 </div>
 
+
                 <div className="bg-white rounded-lg shadow p-6 mb-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                         <Edit3 className="w-5 h-5 mr-2" /> Update Name
@@ -282,6 +289,7 @@ export default function Profile() {
                         </button>
                     </div>
                 </div>
+
 
                 <div className="bg-white rounded-lg shadow p-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">

@@ -8,19 +8,14 @@ export default function FeaturesSection() {
             img: "/assets/online-class.jpg",
         },
         {
-            title: "📊 Progress Tracking",
-            desc: "Stay motivated with real-time progress tracking and lesson completion stats.",
-            img: "/assets/progress.jpg",
+            title: "🎓 Course Certificates",
+            desc: "Earn certificates of completion to showcase your piano learning achievements.",
+            img: "/assets/certificate.jpg",
         },
         {
             title: "📑 Downloadable Notes",
             desc: "Access sheet music and practice exercises anytime to reinforce your learning.",
             img: "/assets/notes.jpg",
-        },
-        {
-            title: "🔒 Secure Learning",
-            desc: "Encrypted streaming with anti-piracy protection to keep your lessons safe.",
-            img: "/assets/Hero.jpg",
         },
         {
             title: "💬 Doubt Support",
