@@ -6,6 +6,7 @@ import Footer from "./components/Footer.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import AdminLayout from "./components/AdminLayout.jsx";
+import ScrollToTop from "./components/ScrollToTop.jsx"; // <--- 1. IMPORT THIS
 
 // --- PAGE IMPORTS ---
 import Home from "./pages/Home.jsx";
@@ -18,7 +19,7 @@ import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AdminCourses from "./pages/AdminCourses.jsx";
 import CourseEditor from "./pages/CourseEditor.jsx";
 import CourseInfoPage from "./pages/CourseInfoPage.jsx";
-import CheckoutPage from "./pages/CheckoutPage.jsx"; // <--- IMPORTED
+import CheckoutPage from "./pages/CheckoutPage.jsx";
 
 // --- LIVE COURSE IMPORTS ---
 import LiveClasses from "./pages/LiveClasses.jsx";
@@ -37,6 +38,9 @@ export default function App() {
 
   return (
     <>
+      {/* 2. ADD COMPONENT HERE */}
+      <ScrollToTop />
+
       {/* Only render Navbar if showLayout is true */}
       {showLayout && <Navbar />}
       
@@ -55,14 +59,13 @@ export default function App() {
         <Route path="/my-classroom" element={<ProtectedRoute><MyClassroom /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         
-        {/* FIXED CHECKOUT ROUTE: Matches "/checkout/course/ID" */}
+        {/* Checkout Routes */}
         <Route path="/checkout/course/:courseId" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
         <Route path="/checkout/live/:courseId" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
         
         {/* Content Pages (After Enrollment) */}
         <Route path="/courses/:courseId" element={<ProtectedRoute><CourseDetailPage /></ProtectedRoute>} />
         <Route path="/enrolled/live-course/:courseId" element={<ProtectedRoute><EnrolledLiveCoursePage /></ProtectedRoute>} />
-        
         
         {/* --- ADMIN ROUTES --- */}
         <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>

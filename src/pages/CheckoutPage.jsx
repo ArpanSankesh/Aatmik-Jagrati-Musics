@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '../Config/firebaseConfig';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -10,11 +9,8 @@ import {
     VideoCameraIcon, 
     BookOpenIcon,
     CheckCircleIcon,
-    ClockIcon,
-    PlayCircleIcon
+    ClockIcon
 } from '@heroicons/react/24/solid';
-
-
 
 export default function CheckoutPage() {
     const { courseId } = useParams();
@@ -22,14 +18,54 @@ export default function CheckoutPage() {
     const navigate = useNavigate();
     const location = useLocation();
 
-
     const isLiveCourse = location.pathname.includes('/checkout/live/');
-
 
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
+    
+    // 1. New State for enrollment check
+    const [isAlreadyEnrolled, setIsAlreadyEnrolled] = useState(false);
 
+    // 2. Check Enrollment Status on Load
+    useEffect(() => {
+        const checkEnrollment = async () => {
+            if (!currentUser || !courseId) return;
+
+            try {
+                const userDocRef = doc(db, 'users', currentUser.uid);
+                const userSnap = await getDoc(userDocRef);
+
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    // Check the correct array based on course type
+                    const listName = isLiveCourse ? 'enrolledLiveCourses' : 'enrolledCourses';
+                    const enrollments = userData[listName] || [];
+
+                    // Check if courseId exists and is NOT expired
+                    const hasValidEnrollment = enrollments.some(enrollment => {
+                        if (enrollment.courseId !== courseId) return false;
+                        
+                        // If there is an expiry date, ensure it is in the future
+                        if (enrollment.expiryDate) {
+                            const expiry = enrollment.expiryDate.toDate();
+                            return expiry > new Date();
+                        }
+                        // If no expiry date (lifetime), they are enrolled
+                        return true;
+                    });
+
+                    if (hasValidEnrollment) {
+                        setIsAlreadyEnrolled(true);
+                    }
+                }
+            } catch (error) {
+                console.error("Error checking enrollment:", error);
+            }
+        };
+
+        checkEnrollment();
+    }, [currentUser, courseId, isLiveCourse]);
 
     useEffect(() => {
         const fetchCourse = async () => {
@@ -52,7 +88,6 @@ export default function CheckoutPage() {
         fetchCourse();
     }, [courseId, navigate, isLiveCourse]);
 
-
     const loadRazorpayScript = () => {
         return new Promise((resolve) => {
             const script = document.createElement('script');
@@ -63,7 +98,6 @@ export default function CheckoutPage() {
         });
     };
 
-
     const handlePayment = async () => {
         if (!currentUser) {
             alert("Please login to purchase.");
@@ -71,12 +105,9 @@ export default function CheckoutPage() {
             return;
         }
 
-
         setProcessing(true);
 
-
         const res = await loadRazorpayScript();
-
 
         if (!res) {
             alert('Razorpay SDK failed to load. Check your internet connection.');
@@ -84,15 +115,13 @@ export default function CheckoutPage() {
             return;
         }
 
-
         const cleanPrice = course.price ? parseInt(course.price.toString().replace(/[^0-9]/g, '')) : 0;
-
 
         const options = {
             key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
             amount: cleanPrice * 100,
             currency: "INR",
-            name: "Your Platform Name",
+            name: "Aatmik Jagrati Musics", 
             description: isLiveCourse ? `Live Session: ${course.title}` : `Course: ${course.title}`,
             image: "https://via.placeholder.com/150",
             
@@ -102,7 +131,6 @@ export default function CheckoutPage() {
                     
                     const expiryDate = new Date();
                     expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-
 
                     const enrollmentData = {
                         courseId: course.id,
@@ -114,15 +142,12 @@ export default function CheckoutPage() {
                         type: isLiveCourse ? 'live' : 'standard'
                     };
 
-
                     const userRef = doc(db, 'users', currentUser.uid);
                     const fieldToUpdate = isLiveCourse ? 'enrolledLiveCourses' : 'enrolledCourses';
 
-
-                    await updateDoc(userRef, {
+                    await setDoc(userRef, {
                         [fieldToUpdate]: arrayUnion(enrollmentData)
-                    });
-
+                    }, { merge: true });
 
                     alert(isLiveCourse 
                         ? "Payment Successful! You are enrolled in the Live Session." 
@@ -130,10 +155,9 @@ export default function CheckoutPage() {
                         
                     navigate('/my-classroom');
 
-
                 } catch (error) {
                     console.error("Error saving enrollment:", error);
-                    alert("Payment succeeded but database update failed. Payment ID: " + response.razorpay_payment_id);
+                    alert(`Payment succeeded (ID: ${response.razorpay_payment_id}) but database update failed. Please contact support with this ID.`);
                 } finally {
                     setProcessing(false);
                 }
@@ -145,15 +169,13 @@ export default function CheckoutPage() {
                 contact: ""
             },
             theme: {
-                color: "#4F46E5" // Indigo for both
+                color: "#4F46E5" 
             }
         };
-
 
         try {
             const paymentObject = new window.Razorpay(options);
             paymentObject.open();
-
 
             paymentObject.on('payment.failed', function (response) {
                 alert("Payment Failed: " + response.error.description);
@@ -165,8 +187,6 @@ export default function CheckoutPage() {
         }
     };
 
-
-    // Calculate total stats for standard courses
     const getTotalStats = () => {
         if (isLiveCourse || !course?.levels) return { totalLessons: 0, totalDuration: 0 };
         
@@ -188,7 +208,6 @@ export default function CheckoutPage() {
         return { totalLessons, totalDuration };
     };
 
-
     if (loading) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -197,13 +216,40 @@ export default function CheckoutPage() {
         );
     }
     
-    if (!course) return null;
+    // 3. Render "Already Enrolled" Screen if true
+    if (isAlreadyEnrolled) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+                <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-gray-100">
+                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircleIcon className="w-10 h-10 text-green-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Already Enrolled</h2>
+                    <p className="text-gray-600 mb-8">
+                        You already have an active enrollment for this {isLiveCourse ? 'session' : 'course'}. 
+                        There is no need to purchase it again.
+                    </p>
+                    <button 
+                        onClick={() => navigate('/my-classroom')}
+                        className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    >
+                        Go to My Classroom
+                    </button>
+                    <button 
+                        onClick={() => navigate(-1)}
+                        className="mt-4 text-sm text-gray-500 hover:text-gray-700 font-medium"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
+    if (!course) return null;
 
     const stats = getTotalStats();
 
-
-    // Course features - copied from info pages
     const courseFeatures = isLiveCourse ? [
         { icon: ClockIcon, text: "Interactive Live Session" },
         ...(course.validityDays ? [{
@@ -230,10 +276,8 @@ export default function CheckoutPage() {
         { icon: CheckCircleIcon, text: 'Certificate of completion' }
     ];
 
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4 sm:px-6 lg:px-8 font-sans">
-            {/* Progress indicator */}
             <div className="max-w-3xl mx-auto mb-8">
                 <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
                     <span className="flex items-center gap-1">
@@ -253,22 +297,17 @@ export default function CheckoutPage() {
                 </div>
             </div>
 
-
             <div className="max-w-5xl mx-auto">
                 <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
                         
-                        {/* Left Section - Order Summary */}
                         <div className="lg:col-span-2 p-8 lg:p-12">
                             <div className="mb-8">
                                 <h1 className="text-3xl font-bold text-slate-900 mb-2">Complete Your Enrollment</h1>
                                 <p className="text-slate-600">You're one step away from accessing premium content</p>
                             </div>
 
-
-                            {/* Course Card with Image */}
                             <div className="bg-slate-50 rounded-xl p-6 mb-8 border border-slate-200">
-                                {/* Course Image */}
                                 {course.imageUrl && (
                                     <img 
                                         src={course.imageUrl} 
@@ -302,8 +341,6 @@ export default function CheckoutPage() {
                                 </div>
                             </div>
 
-
-                            {/* What's Included - copied from info pages */}
                             <div className="mb-8">
                                 <h3 className="text-lg font-bold text-slate-900 mb-4">
                                     {isLiveCourse ? 'This session includes' : 'This course includes'}
@@ -318,8 +355,6 @@ export default function CheckoutPage() {
                                 </div>
                             </div>
 
-
-                            {/* Trust Signals */}
                             <div className="flex flex-wrap gap-4 pt-6 border-t border-slate-200">
                                 <div className="flex items-center gap-2 text-sm text-slate-600">
                                     <ShieldCheckIcon className="w-5 h-5 text-green-600" />
@@ -336,8 +371,6 @@ export default function CheckoutPage() {
                             </div>
                         </div>
 
-
-                        {/* Right Section - Payment */}
                         <div className="p-8 lg:p-12 flex flex-col justify-between bg-gradient-to-br from-indigo-50 to-indigo-100/50">
                             <div>
                                 <h3 className="text-xl font-bold text-slate-900 mb-6">Order Summary</h3>
@@ -356,7 +389,6 @@ export default function CheckoutPage() {
                                         <span>{course.price}</span>
                                     </div>
                                 </div>
-
 
                                 <button
                                     onClick={handlePayment}
@@ -381,7 +413,6 @@ export default function CheckoutPage() {
                                     )}
                                 </button>
 
-
                                 <button 
                                     onClick={() => navigate(-1)}
                                     disabled={processing}
@@ -390,7 +421,6 @@ export default function CheckoutPage() {
                                     ← Go Back
                                 </button>
                             </div>
-
 
                             <div className="mt-8 pt-6 border-t border-slate-300">
                                 <div className="flex items-center gap-2 text-xs text-slate-600 mb-2">
@@ -405,8 +435,6 @@ export default function CheckoutPage() {
                     </div>
                 </div>
 
-
-                {/* Additional Trust Section */}
                 <div className="mt-8 text-center">
                     <p className="text-sm text-slate-600">
                         Need help? <button onClick={() => navigate('/support')} className="text-indigo-600 hover:text-indigo-700 font-semibold underline">Contact Support</button>

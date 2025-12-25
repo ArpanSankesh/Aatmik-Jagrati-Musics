@@ -204,8 +204,8 @@ export default function LiveCourseEditor() {
                   <div className="w-full h-48 bg-gray-100 rounded-xl border-2 border-gray-300 flex flex-col items-center justify-center p-4">
                      <div className="w-16 h-16 mb-3 relative">
                        <svg className="transform -rotate-90" width="100%" height="100%" viewBox="0 0 64 64">
-                         ircle cx="32" cy="32" r="28" stroke="#e5e7eb" strokeWidth="4"4" fill="none" />
-                         ircle cx="32" cy="32" r="28" stroke="#4f46e5" strokeWidth="4" fill="none"
+                         <circle cx="32" cy="32" r="28" stroke="#e5e7eb" strokeWidth="4" fill="none" />
+                         <circle cx="32" cy="32" r="28" stroke="#4f46e5" strokeWidth="4" fill="none"
                            strokeDasharray={`${2 * Math.PI * 28}`}
                            strokeDashoffset={`${2 * Math.PI * 28 * (1 - imageUploadProgress / 100)}`}
                            strokeLinecap="round" className="transition-all duration-n-300" />
@@ -308,8 +308,8 @@ export default function LiveCourseEditor() {
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 relative flex-shrink-0">
                     <svg className="transform -rotate-90" width="100%" height="100%" viewBox="0 0 64 64">
-                      ircle cx="32" cy="32" r="28" stroke="#e5e7eb" strokeWidthth="4" fill="none" />
-                      ircle cx="32" cy="32" r="28" stroke="#8b5cf6" strokeWidth="4" fill="none"
+                      <circle cx="32" cy="32" r="28" stroke="#e5e7eb" strokeWidthth="4" fill="none" />
+                     <circle cx="32" cy="32" r="28" stroke="#8b5cf6" strokeWidth="4" fill="none"
                         strokeDasharray={`${2 * Math.PI * 28}`}
                         strokeDashoffset={`${2 * Math.PI * 28 * (1 - videoUploadProgress / 100)}`}
                         strokeLinecap="round" className="transition-all duration-n-300" />
